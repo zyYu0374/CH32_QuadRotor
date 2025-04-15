@@ -1,9 +1,5 @@
-# 版本说明
-- 用于嵌赛无人机的飞控固件
-- CH32V307 & MPU6050
-
-## 项目结构
-//待完善
+## 记录
+- 导入问题：因为之前的IDE是基于Eclipse架构，而MounRiver2是基于VSCode，所以直接导入会有一些路径问题。需要修改.project文件，将`<linkedResources>...</linkedResources>`里的内容删掉，就可以编译了。
 
 ## TODO
 - 新电池PID参数细调
