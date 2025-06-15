@@ -2,11 +2,21 @@
 #define __DPS310_H
 //默认I2C接口
 
-#define DPS310_ADDRESS 0x76 //从设备地址,SDO接地
+extern uint32_t DPS310_Pressure;
+extern double last_T_raw_sc;
 
-#define DPS310_PSR_B2_REG 0x00 //压力数据（补码）byte012
-#define DPS310_PSR_B1_REG 0x01
-#define DPS310_PSR_B0_REG 0x02
+#define DPS310_ADDRESS 0x76 //从设备地址,SDO接地
+#define DPS_FIFO_SIZE 32 //FIFO深度
+
+/********
+ * 1.The data from the FIFO is read out from the Pressure Data (PRS_Bn) registers 
+ * regardless of whether the next result in the FIFO is a temperature or a pressure measurement.
+ * 
+ * 2.If the FIFO is enabled, the register will contain the FIFO pressure and/or temperature results. 
+ */
+#define DPS310_PRS_B2_REG 0x00 //压力数据（补码）byte012
+#define DPS310_PRS_B1_REG 0x01
+#define DPS310_PRS_B0_REG 0x02
 
 #define DPS310_TMP_B2_REG 0x03 //温度数据（补码）byte012
 #define DPS310_TMP_B1_REG 0x04
@@ -138,21 +148,25 @@
 
 void DPS310_Init(void);
 
-uint8_t DPS310_Read_Byte(u8 reg);
+uint8_t DPS310_Read_Byte(uint8_t reg);
+uint8_t DPS310_Read_Byte_Init(uint8_t reg);
 
-void DPS310_Write_Byte(u8 reg,u8 data);
+void DPS310_Write_Byte(uint8_t reg,uint8_t data);
+void DPS310_Write_Byte_Init(uint8_t reg,uint8_t data);
 
 uint8_t DPS310_ReadID(void);
 
 uint8_t DPS310_GetStatus(uint8_t status_flag);
 
-uint32_t DPS310_Get_Pressure(void);
+double DPS310_Get_Pressure(void);
 
-uint32_t DPS310_Get_Temperature(void);
+double DPS310_Get_Temperature(void);
 
-uint32_t DPS310_Compensate_P(uint32_t P_raw_sc ,uint32_t T_raw_sc);
+double DPS310_Compensate_P(double P_raw_sc ,double T_raw_sc);
 
-uint32_t DPS310_Compensate_T(uint32_t T_raw_sc);
+double DPS310_Compensate_T(double T_raw_sc);
+
+void getTwosComplement(int32_t *raw, uint8_t length);
 
 uint32_t DPS310_Get_Kp(void);
 
@@ -161,16 +175,16 @@ uint32_t DPS310_Get_Kt(void);
 typedef struct 
 {
     /* 补偿系数 */
-    uint16_t c0;//12b
-    uint16_t c1;//12b
-    uint32_t c00;//20b
-    uint32_t c10;//20b
+    int32_t c0;//12b
+    int32_t c1;//12b
+    int32_t c00;//20b
+    int32_t c10;//20b
 
-    uint16_t c01;//16b
-    uint16_t c11;//16b
-    uint16_t c20;//16b
-    uint16_t c21;//16b
-    uint16_t c30;//16b
+    int32_t c01;//16b
+    int32_t c11;//16b
+    int32_t c20;//16b
+    int32_t c21;//16b
+    int32_t c30;//16b
 
 }DPS310;
 

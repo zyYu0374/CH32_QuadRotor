@@ -5,8 +5,9 @@
 
 *******************************************************************************/
 #include "IMU_handle.h"
+#include "DPS310.h"
 
-FilterBuf_STRUCT gyro_filter[6];    //IMU平均值滤波结构体
+FilterBuf_STRUCT gyro_filter[6];    //IMU平均值滤波结构体,Head+Rear+base[5]
 MPU6050_para_t MPU6050_para =       //从IMU获取到的原始数据
 {
 	0,//yaw
@@ -27,6 +28,9 @@ void IMU_task(void *pvParameters)
 {
     while(1)
     {
+        // printf("4\r\n");
+        // printf("IMU\r\n");
+        // DPS310_Pressure = DPS310_Get_Pressure();//加了之后导致程序只在电机软起动线程运行
         IMU_IO_STATUS = IMU_IO_BUSY;    //更新状态
         if(MPU6050_MPU_DMP_GetData() == RESET)
         {
@@ -39,6 +43,7 @@ void IMU_task(void *pvParameters)
 }
 
 /*IMU滤波相关*/
+// 把数据加载到用于滤波的工具数组里
 void load_filter_data()
 {
     FilterSample(&gyro_filter[0], MPU6050_para.yaw);
@@ -49,6 +54,7 @@ void load_filter_data()
     FilterSample(&gyro_filter[5], (float)MPU6050_para.av_roll);
 }
 
+// 基于工具数组的数据计算滤波值
 void calc_IMU_filter()
 {
     /*!Debug 调换了Pitch和Roll*/
@@ -66,5 +72,4 @@ void calc_IMU_filter()
     {
         MPU6050_para_filted.av_pitch=0;
     }
-
 }

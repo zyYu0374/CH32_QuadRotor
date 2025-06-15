@@ -32,7 +32,7 @@ void USARTx_CFG(void)
 
     GPIO_PinRemapConfig(GPIO_FullRemap_USART5, ENABLE);   //串口5的完全重映射
 
-    // 串口2
+    // 串口2，接收机
     /* USART2 TX-->A.2   RX-->A.3 */
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
@@ -120,7 +120,7 @@ void USARTx_CFG(void)
 
 void USART2_IRQHandler(void)
 {
-
+    // printf("6666\r\n");
     if(USART_GetITStatus(USART2,USART_IT_RXNE) != RESET && USART_GetFlagStatus(USART2, USART_FLAG_RXNE) != RESET)
     {
         USART2_RxCpltCallback(USART2);
@@ -130,6 +130,7 @@ void USART2_IRQHandler(void)
 void USART2_RxCpltCallback(USART_TypeDef *USARTx)
 {
     RxBuf[RxBuf_Index++] =USART_ReceiveData(USARTx);
+    // printf("6666\r\n");
 
     if (RxBuf_Index == (sizeof(RxBuf)/sizeof(RxBuf[0])))
     {

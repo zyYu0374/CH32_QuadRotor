@@ -3,6 +3,8 @@
 #include "stdint.h"
 #include "MyI2C.h"
 
+//更换为DPS310
+
 BMP280 bmp280_inst;
 BMP280* bmp280 = &bmp280_inst;		//这个全局结构体变量用来保存存在芯片内ROM补偿参数
 

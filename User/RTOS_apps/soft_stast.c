@@ -20,16 +20,18 @@ void Motor_sort_start(void *pvParameters);
 /*缓启动线程*/
 void Motor_sort_start(void *pvParameters)
 {
-    control.is_locked = Locked; //确保不会刚开机就缓启动
+    control.is_locked = Locked; //确保不会刚开机就缓启动（此线程优先级最高）
     while(1)
     {
+        // printf("1\r\n");
+        // printf("SS\r\n");
         if(control.is_locked == Unlocked && last_RC_lock_state == Locked){	//当解锁电机时候
             printf("MOTOR UNLOCKED!!!!\n");
             last_RC_lock_state = Unlocked;
             control.MOTOR_MODE = MOTOR_SOFT_STARTING;	//切换到缓启动模式
-//            control.Mech_zero_yaw = MPU6050_para_filted.yaw;
+            // control.Mech_zero_yaw = MPU6050_para_filted.yaw;
             for(int i=0; i<SOFT_START_TIME; i++){	//缓启动逻辑
-                Motor_speed_set = ((((float)PWM_THROTTLE_MIN_ROTATE-(float)PWM_THROTTLE_MIN)/(float)SOFT_START_TIME))*i + PWM_THROTTLE_MIN;
+                Motor_speed_set = ((((float)PWM_THROTTLE_MIN_ROTATE-(float)PWM_THROTTLE_MIN)/(float)SOFT_START_TIME))*i + PWM_THROTTLE_MIN;//从最小油门一点一点往上加
                     Motor_ctr_SOFT_START(Motor_speed_set, 1);
                     Motor_ctr_SOFT_START(Motor_speed_set, 2);
                     Motor_ctr_SOFT_START(Motor_speed_set, 3);
@@ -41,7 +43,7 @@ void Motor_sort_start(void *pvParameters)
                     }
 
                 vTaskDelay(1);
-            }
+            }//301ms
 
             printf("MOTOR OK!!!!\n");
             control.MOTOR_MODE = MOTOR_NORMAL; //切换回正常模式

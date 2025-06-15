@@ -3,7 +3,7 @@
 #include "bsp_filter.h"
 
 
-
+//环形buffer，在队尾插入NewValue
 void FilterSample( FilterBuf_STRUCT* p, float NewValue)
 {
 	if(p->Head == 0 && p->Rear == 0 && p->Base[0] == 0)

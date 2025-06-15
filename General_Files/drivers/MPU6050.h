@@ -1,6 +1,11 @@
 #ifndef __MPU6050_H_
 #define __MPU6050_H_
 #include "stdint.h"
+
+#define I2C_TIMEOUT 3 //I2C超时时间
+#define I2C_NoSuccess 0
+#define I2C_Success 1
+
 //是否启用DMP
 #define DMP
 
@@ -90,7 +95,8 @@ unsigned int MPU6050_Get_Data(unsigned char REG_ADDR);
 float MPU6050_Get_Temp(void);
 
 void MPU6050_I2C_Mem_Write(unsigned char DEV_ADDR, unsigned char REG_ADDR, unsigned char len, unsigned char *buf);
-void MPU6050_I2C_Mem_Read(unsigned char DEV_ADDR, unsigned char REG_ADDR, unsigned char len, unsigned char *buf);
+uint8_t MPU6050_I2C_Mem_Read(unsigned char DEV_ADDR, unsigned char REG_ADDR, unsigned char len, unsigned char *buf);
+uint8_t MPU6050_I2C_Mem_Read_Init(unsigned char DEV_ADDR, unsigned char REG_ADDR, unsigned char len, unsigned char *buf);
 unsigned char MPU6050_MPU_DMP_GetData(void);
 typedef struct
 {

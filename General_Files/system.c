@@ -5,7 +5,7 @@
 #include "../apps/inc/Crsf.h"
 #include "../General_Files/drivers/uart.h"
 #include "../General_Files/drivers/MPU6050.h"
-#include "../General_Files/drivers/BMP280.h"
+#include "../General_Files/drivers/DPS310.h"
 #include "../General_Files/drivers/pwm.h"
 #include "../General_Files/drivers/adc.h"
 #include "../General_Files/drivers/tim.h"
@@ -19,11 +19,12 @@ void System_Init()
     USARTx_CFG();
     while(MPU6050_Init());
     PWM_Init();
-    Bmp_Init();
+    // DPS310_Init();//气压计初始化
     BAT_ADC_Init();
     PIDSTRUCT_Init();
     LED_Init();
     printf("System_Init OK!\r\n");
+    
 }
 
 void System_Loop()

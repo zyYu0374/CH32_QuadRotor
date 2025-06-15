@@ -13,6 +13,7 @@ bool micolink_parse_char(MICOLINK_MSG_t* msg, uint8_t data);
 FilterBuf_STRUCT mtf01_filter[5];                    // 光流计和雷达平均值滤波结构体
 MICOLINK_PAYLOAD_RANGE_SENSOR_t payload;            // 光流计和雷达的数据都存在这里
 MICOLINK_PAYLOAD_RANGE_SENSOR_t payload_filtered;    // 均值滤波后光流计和雷达的数据都存在这里
+//Micolink协议
 
 
 void micolink_decode(uint8_t data)

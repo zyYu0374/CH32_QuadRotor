@@ -139,7 +139,7 @@ u16 Get_ConversionVal(s16 val)
 void BAT_ADC_Init()
 {
     ADC_Function_Init();
-    printf("CalibrattionValue:%d\n", Calibrattion_Val);
+    printf("CalibrattionValue:%d\r\n", Calibrattion_Val);
 
     DMA_Tx_Init( DMA1_Channel4, (u32)&ADC1->RDATAR, (u32)TxBuf, 1 );
     DMA_Cmd( DMA1_Channel4, ENABLE );

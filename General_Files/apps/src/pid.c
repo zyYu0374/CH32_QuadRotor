@@ -17,12 +17,14 @@ extern void pid_reset  (PID_STRUCT *p);
 extern void pid_init   (PID_STRUCT *pid);
 extern void pid_clc    (PID_STRUCT *p);
 extern void pid_calc   (PID_STRUCT *p, float fb, float ref);
+extern void D_pid_calc (PID_STRUCT *p, float fb, float ref);
 
 PID_FUNC pid_func = {
     .reset  = pid_reset,
     .init   = pid_init ,
     .clc    = pid_clc  ,
     .calc   = pid_calc ,
+    .D_pid_calc = D_pid_calc,
 };
 
 
@@ -86,7 +88,7 @@ void pid_calc( PID_STRUCT *pid, float set, float fdb)
 //    LimitMax(pid->out,pid->max_out);
 //    LimitMin(pid->out,pid->min_out);
     /*输出死区*/
-    if(pid->error[0] <= pid->DeadBand && pid->error[0] >= -pid->DeadBand){
+    if(pid->error[0] <= pid->DeadBand && pid->error[0] >= -pid->DeadBand){//DeadBand = 0.01
         pid->out = 0;
         pid->Iout = 0;
     }
@@ -94,3 +96,29 @@ void pid_calc( PID_STRUCT *pid, float set, float fdb)
 
 
 
+/* 带一阶惯性滤波器的微分先行PID */
+void D_pid_calc( PID_STRUCT *pid, float set, float fdb)
+{
+    pid->error[2] = pid->error[1];
+    pid->error[1] = pid->error[0];
+    pid->set = set;
+    pid->fdb = fdb;
+    pid->error[0] = set - fdb;
+
+    pid->Pout = pid->Kp * pid->error[0];
+    pid->Iout += pid->Ki * pid->error[0];
+
+    float c1,c2,c3,temp = 0;
+
+    temp = pid->gama * pid->Kd + pid->Ki;
+    c3 = pid->Kd / temp;
+    c2 = (pid->Kd + pid->Kp) / temp;
+    c1 = pid->gama / c3;
+
+    pid->Dbuf[0] = c1*pid->Kd + c2*pid->fdb + c3*pid->fdb_Last; 
+    pid->Dout = pid->Kd * pid->Dbuf[0];
+
+    pid->out = pid->Pout + pid->Iout + pid->Dout;
+
+    pid->fdb_Last = pid->fdb;
+}

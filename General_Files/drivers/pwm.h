@@ -8,7 +8,7 @@
 #define PWM_THROTTLE_MAX 2780           //最大PWM占空比
 #define PWM_THROTTLE_MIN 1440           //最小PWM占空比
 #define PWM_THROTTLE_MIN_ROTATE 1650    //让电机转动的最小油门
-#define PWM_CLOSE_LOOP_CONTROL_ENABLE   1650 //启用pid控制的油门
+#define PWM_CLOSE_LOOP_CONTROL_ENABLE 1650 //启用pid控制的油门
 
 // define mode1锛屽氨鏄?鍚戜笅璁℃暟锛宮ode2鏄?鍚戜笂璁℃暟
 #define PWM_MODE PWM_MODE1

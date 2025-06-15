@@ -3,7 +3,17 @@
 uint8_t RxBuf[CRSF_MAX_PACKET_SIZE];		//Crsf数据包缓冲区
 uint8_t RxBuf_Index;										
 int CrsfChannels[CRSF_NUM_CHANNELS];        //Crsf通道值
-
+/* 
+ * CrsfChannel[0]:174~1811
+ * CrsfChannel[1]:174~1808
+ * CrsfChannel[2]:174~1801
+ * CrsfChannel[3]:174~1811
+ * CrsfChannel[4]:松开191,按下1792
+ * CrsfChannel[5]:191,997,1792
+ * CrsfChannel[6]:191,997,1792
+ * CrsfChannel[7]:松开191,按下1792
+ * 
+ * */
 
 //uint16_t CRSF_CH[17];
 //uint16_t CRSF_CH_LAST[17];

@@ -21,6 +21,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "RTOS_tasks.h"
+#include "tim.h"
 
 
 /*********************************************************************
@@ -56,16 +57,17 @@ int main(void)
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
 	SystemCoreClockUpdate();
 	Delay_Init();
-	USART_Printf_Init(230200);
+	USART_Printf_Init(230400);//UART1上位机调试串口baudrate
 	Crc_init(0xD5);
     	
-	printf("SystemClk:%d\r\n",SystemCoreClock);
+	printf("SystemClk:%d\r\n",SystemCoreClock);//主频
 	printf("FreeRTOS Kernel Version:%s\r\n",tskKERNEL_VERSION_NUMBER);
 	GPIO_Toggle_INIT();
+	TIM3_Init(0xFFFF,71);//1us计时频率
     System_Init();
 
 	Delay_Ms(200);	//??????????????????
-    RTOS_init();
+    RTOS_init();//操作系统接管，不在回到主程序
 
 	while(1)
 	{

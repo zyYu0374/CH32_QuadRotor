@@ -15,12 +15,14 @@
 #include "RTOS_apps/Print_status.h"
 #include "RTOS_apps/control_handle.h"
 #include "RTOS_apps/IMU_handle.h"
+#include "RTOS_apps/DPS310_handle.h"
 
 
 TaskHandle_t PrintTask_Handler;
 TaskHandle_t Motor_SoftStart_Handler;
 TaskHandle_t Control_task_Handler;
 TaskHandle_t IMU_Task_Handler;
+TaskHandle_t DPS310_Task_Handler;
 
 
 void RTOS_init();
@@ -28,7 +30,7 @@ void test_task(void *pvParameters);
 
 void RTOS_init()
 {
-    //测试线程
+    // 测试线程
     // xTaskCreate((TaskFunction_t )test_task,
     //                 (const char*    )"test",
     //                 (uint16_t       )TEST_STK_SIZE,
@@ -36,8 +38,8 @@ void RTOS_init()
     //                 (UBaseType_t    )TEST_TASK_PRIO,
     //                 (TaskHandle_t*  )&TESTTask_Handler);
 
-    //串口调试线程
-    xTaskCreate((TaskFunction_t )Print_status_task,
+    // 串口调试线程
+    xTaskCreate((TaskFunction_t )Print_status_task,//2
                 (const char*    )"uart",
                 (uint16_t       )PRINT_STK_SIZE,
                 (void*          )NULL,
@@ -45,7 +47,7 @@ void RTOS_init()
                 (TaskHandle_t*  )&PrintTask_Handler);
     
     // 电机软启动线程
-    xTaskCreate((TaskFunction_t )Motor_sort_start,
+    xTaskCreate((TaskFunction_t )Motor_sort_start,//1
                 (const char*    )"Soft",
                 (uint16_t       )SoftStart_SIZE,
                 (void*          )NULL,
@@ -53,7 +55,7 @@ void RTOS_init()
                 (TaskHandle_t*  )&Motor_SoftStart_Handler);
 
     //飞机控制线程
-    xTaskCreate((TaskFunction_t )control_handle_task,
+    xTaskCreate((TaskFunction_t )control_handle_task,//3
                 (const char*    )"control",
                 (uint16_t       )ControlHandle_SIZE,
                 (void*          )NULL,
@@ -61,12 +63,21 @@ void RTOS_init()
                 (TaskHandle_t*  )&Control_task_Handler);
 
     //IMU线程
-    xTaskCreate((TaskFunction_t )IMU_task,
+    xTaskCreate((TaskFunction_t )IMU_task,//4
                 (const char*    )"imu",
                 (uint16_t       )IMU_SIZE,
                 (void*          )NULL,
                 (UBaseType_t    )IMU_PRIO,
                 (TaskHandle_t*  )&IMU_Task_Handler);
+
+    // //DPS310气压计线程
+    // xTaskCreate((TaskFunction_t )DPS310_task,//5
+    //             (const char*    )"DPS310",
+    //             (uint16_t       )DPS310_SIZE,
+    //             (void*          )NULL,
+    //             (UBaseType_t    )DPS310_PRIO,
+    //             (TaskHandle_t*  )&DPS310_Task_Handler);
+    printf("RTOS_Init OK!\r\n");
     vTaskStartScheduler();
 }
 

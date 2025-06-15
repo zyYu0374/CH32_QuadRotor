@@ -29,14 +29,14 @@ void TIM3_Init( u16 arr, u16 psc)
    TIM_TimeBaseInitStructure.TIM_Period = arr;
    TIM_TimeBaseInitStructure.TIM_Prescaler = psc;
    TIM_TimeBaseInitStructure.TIM_ClockDivision = TIM_CKD_DIV1;
-   TIM_TimeBaseInitStructure.TIM_CounterMode = TIM_CounterMode_Down;
+   TIM_TimeBaseInitStructure.TIM_CounterMode = TIM_CounterMode_Up;
    TIM_TimeBaseInit( TIM3, &TIM_TimeBaseInitStructure);
 
-   TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
-   TIM_ARRPreloadConfig( TIM3, ENABLE );
+   // TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
+   // TIM_ARRPreloadConfig( TIM3, ENABLE );
    TIM_Cmd( TIM3, ENABLE );
 
-   TIM3_Interrupt_Init();
+   // TIM3_Interrupt_Init();
 }
 
 

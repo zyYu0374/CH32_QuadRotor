@@ -13,8 +13,8 @@ TARGET := $(shell basename "$$PWD")
 # debug build?
 DEBUG := 1
 # optimization
-C_OPT := -Og
-CPP_OPT := -Og -std=c++17
+C_OPT := -O0
+CPP_OPT := -O0 -std=c++17
 # set the gcc used
 GCC_PREFIX := /opt/wch/mounriver-studio-toolchain-riscv-gcc/bin/riscv-none-embed-
 # add the chip info

@@ -79,7 +79,7 @@ unsigned char MPU6050_Init()
 //=======================================================================
     u8 res;
 
-    I2C2_HARD_Init(400000, 0x00);
+    I2C2_HARD_Init(250000, 0x00);//原为400K，由于程序会卡在EVT6，故降低频率
 	MPU6050_WriteByte(MPU6050_REG_PWR_MGMT1, 0x80);//复位
 	Delay_Ms(100);
 	MPU6050_WriteByte(MPU6050_REG_PWR_MGMT1, 0x00);//解除休眠状态
@@ -95,20 +95,42 @@ unsigned char MPU6050_Init()
 #ifdef DMP
 	res = mpu_dmp_init();
 	printf("mpu_dmp_init err code:%d\r\n", res);
+    if(!res)    printf("mpu dmp init OK!\r\n");
 #endif
 
 	return res;
 }
 
-void MPU6050_I2C_Mem_Read(unsigned char DEV_ADDR, unsigned char REG_ADDR, unsigned char len, unsigned char *buf)
+uint16_t count_mem_read = 0;
+uint8_t MPU6050_I2C_Mem_Read(unsigned char DEV_ADDR, unsigned char REG_ADDR, unsigned char len, unsigned char *buf)
 {
+    uint16_t timeout = I2C_TIMEOUT; //防止死循环
+
     //产生起始信号
     while(I2C_GetFlagStatus(I2C2, I2C_FLAG_BUSY) != RESET);
     I2C_GenerateSTART(I2C2, ENABLE);
     //发送地址&写
     while(!I2C_CheckEvent(I2C2, I2C_EVENT_MASTER_MODE_SELECT));
     I2C_Send7bitAddress(I2C2, DEV_ADDR, I2C_Direction_Transmitter);
-    while(!I2C_CheckEvent(I2C2, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED));
+    while(!I2C_CheckEvent(I2C2, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED))   //卡在这一行！！！
+    {
+        count_mem_read++;
+        printf("count:%d\r\n",count_mem_read);
+        
+        if(--timeout == 0)//超时处理
+        {
+            printf("Bug Happen!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\r\n");
+            // printf("Bug Happen!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\r\n");
+            // printf("Bug Happen!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\r\n");
+            // printf("Bug Happen!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\r\n");
+            // printf("Bug Happen!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\r\n");
+            return I2C_NoSuccess; //超时返回
+        }
+    }
+    count_mem_read = 0; //重置计数器
+
+    
+
     //发送数据
     I2C_SendData(I2C2, REG_ADDR);
     while(!I2C_CheckEvent(I2C2, I2C_EVENT_MASTER_BYTE_TRANSMITTED));
@@ -129,8 +151,12 @@ void MPU6050_I2C_Mem_Read(unsigned char DEV_ADDR, unsigned char REG_ADDR, unsign
     }
     I2C_GenerateSTOP(I2C2, ENABLE);
     I2C_AcknowledgeConfig(I2C2, ENABLE);//ACK
+
+    return I2C_Success;
 }
 
+
+unsigned char dataH_last, dataL_last;
 unsigned int MPU6050_Get_Data(u8 REG_ADDR)
 {
 //============================【读高低寄存器值】================================
@@ -140,9 +166,18 @@ unsigned int MPU6050_Get_Data(u8 REG_ADDR)
 //===========================================================================
 	unsigned char dataH, dataL;
 
-	MPU6050_I2C_Mem_Read(MPU6050_ADDR, REG_ADDR, 1, &dataH);
-	MPU6050_I2C_Mem_Read(MPU6050_ADDR, REG_ADDR + 1, 1, &dataL);
-	return (u16)(dataH<<8|dataL);
+    if(MPU6050_I2C_Mem_Read(MPU6050_ADDR, REG_ADDR, 1, &dataH) && MPU6050_I2C_Mem_Read(MPU6050_ADDR, REG_ADDR + 1, 1, &dataL))
+    {
+        dataH_last = dataH; //保存上次读取的高位数据
+        dataL_last = dataL; //保存上次读取的低位数据
+        return (u16)(dataH<<8|dataL);
+    }
+	else
+    {
+        // printf("I2C TimeOut!Skip!I2C TimeOut!Skip!I2C TimeOut!Skip!\r\n");
+        return (u16)(dataH_last<<8|dataL_last);//读取失败就是用上次成功读取的值，跳过这一次
+    }
+
 }
 
 float MPU6050_Get_Temp()

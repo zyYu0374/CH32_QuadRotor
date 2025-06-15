@@ -50,14 +50,13 @@
 
 void Bmp_Init(void);
 
-
 uint8_t BMP280_Read_Byte(u8 reg);
 
 void BMP280_Write_Byte(u8 reg,u8 data);
 
 uint8_t BMP280_ReadID(void);
 
-void BMP_I2C1_Init(u32 bound,u16 host_addr);
+// void BMP_I2C1_Init(u32 bound,u16 host_addr); //硬件I2C初始化函数
 
 
 

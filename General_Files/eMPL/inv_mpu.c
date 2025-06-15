@@ -44,6 +44,7 @@
 //i2c_write(st.hw->addr, st.reg->int_enable, 1, &tmp)
 #define i2c_write   MPU6050_DMP_Write
 #define i2c_read    MPU6050_DMP_Read
+#define i2c_read_init MPU6050_I2C_Mem_Read_Init
 #define delay_ms    Delay_Ms
 #define get_ms      mget_ms
 
@@ -453,8 +454,8 @@ int mpu_init(void)
             st.chip_cfg.accel_half = 0;
         else {
             log_e("Unsupported software product rev %d.\n", rev);
-            return -1;
-//            st.chip_cfg.accel_half = 1;
+            // return -1;
+            st.chip_cfg.accel_half = 1;
         }
     } else {
         if (i2c_read(st.hw->addr, st.reg->prod_id, 1, data))
@@ -492,7 +493,7 @@ int mpu_init(void)
     st.chip_cfg.dmp_loaded = 0;
     st.chip_cfg.dmp_sample_rate = 0;
 
-    if (mpu_set_gyro_fsr(2000))
+    if (mpu_set_gyro_fsr(2000))//卡在I2C_MEM_WRITE过
         return -1;
     if (mpu_set_accel_fsr(2))
         return -1;
@@ -2220,7 +2221,7 @@ unsigned char mpu_dmp_init(void)
 		if(res)return 9;
 	}else return 10;
 
-	printf("mpu dmp init OK!\r\n");
+	
 	return 0;
 }
 

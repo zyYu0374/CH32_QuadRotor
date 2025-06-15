@@ -1,13 +1,22 @@
 /****************************control_handle.c***************************************
 负责无人机的控制
 
+原：
 飞机电机对应图
        3号    4号
- 机头↑   \  /
+ 坤头↑   \  /
         /  \
        2号    1号
 pwm: 电机pwm
-n:   电机编号
+n:   电机编号 motor_ctr(pwm,n)
+
+25嵌赛：
+飞机电机序号(n)对应图
+       1号    2号
+ 坤头↑   \  /
+        /  \
+       3号    4号
+    <<(箭头丝印)
 *******************************************************************************/
 
 #include "control_handle.h"
@@ -29,7 +38,9 @@ void control_handle_task(void *pvParameters)
 
     while(1)
     {
-        Update_ELRS();
+        // printf("3\r\n");
+        // printf("Control\r\n");
+        Update_ELRS();//遥控器数据更新
         if(control.MOTOR_MODE != MOTOR_SOFT_STARTING){      //如果电机正在缓启动，电机不执行控制
             if(control.is_locked==Unlocked){
                 if(control.Throttle>=PWM_CLOSE_LOOP_CONTROL_ENABLE){
@@ -44,7 +55,7 @@ void control_handle_task(void *pvParameters)
             }
             else{
                 Stop_motor();
-                pid_func.clc(&control.PID_roll_outerloop);
+                pid_func.clc(&control.PID_roll_outerloop);//clear
                 pid_func.clc(&control.PID_roll_innerloop);
                 pid_func.clc(&control.PID_pitch_outerloop);
                 pid_func.clc(&control.PID_pitch_innerloop);
@@ -207,10 +218,10 @@ float ELRS_Convert_angle(int ELRS_data)
 {
     float angle;
     if(ELRS_data>1000){
-        angle=(ELRS_data-1000)*ELRS2angle;
+        angle=(ELRS_data-1000)*ELRS2angle;//0 ~ +30°
     }
     else if(ELRS_data<985){
-        angle=(ELRS_data-985)*ELRS2angle;
+        angle=(ELRS_data-985)*ELRS2angle;//-30°
     }
     else {
         angle=0;
@@ -234,12 +245,35 @@ u16 ELRS_Convert_throttle(unsigned ELRS_data)
 // 将摇杆值转化为电机锁
 void ELRS_Convert_lock()
 {
+    // switch (control.is_locked)
+    // {
+    // case Unlocked:
+    //         if(ELRS_Throttle_lock>180 && ELRS_Throttle_lock<200)//松开191
+    //         {
+    //             control.is_locked = Locked;
+    //         }
+    //     break;
+    
+    // case Locked:
+    //     if(ELRS_Throttle<=650){//防止解锁时油门过大
+    //         if(ELRS_Throttle_lock>=1785 && ELRS_Throttle_lock<=1800){
+    //         control.is_locked = Unlocked;
+    //         }
+    //     }
+    //     break;
+
+    // default:
+    //     control.is_locked = control.is_locked;
+    //     break;
+    // }
     if (ELRS_Throttle_lock>=1785 && ELRS_Throttle_lock<=1800){
+        
         control.is_locked = Unlocked;
     }
     else {
         control.is_locked = Locked;
     }
+    
 }
 
 // 将摇杆值转化为飞行模式
@@ -271,7 +305,7 @@ void Check_control_mode()
 }
 
 
-// 更新各个ELRS值
+// 更新遥控器发来的各个ELRS值
 void Update_ELRS()
 {
     control.Yaw=ELRS_Convert_angle(ELRS_Yaw);
@@ -284,11 +318,11 @@ void Update_ELRS()
 }
 
 //***********************************************************************
-// 由于倾斜会导致竖直分量的损失，故需要对于油门进行补偿
+// 由于倾斜会导致推力的竖直分量的损失，故需要对于油门进行补偿
 float Throttle_compensate(float pitch, float roll)
 {
     double z_vector[3];
-    z_vector[0]=sin(angle2rad(pitch))*cos(angle2rad(roll));
+    z_vector[0]=sin(angle2rad(pitch))*cos(angle2rad(roll));//把单位Z轴向量 [0, 0, 1]，经过 roll 和 pitch 的旋转后，转换到世界坐标系下。
     z_vector[1]=-sin(angle2rad(roll));
     z_vector[2]=cos(angle2rad(pitch))*cos(angle2rad(roll));
 
@@ -302,7 +336,7 @@ float angle2rad(float angle)
     return angle*3.1416/180.0f;
 }
 
-//***********************************************************************
+//*********************************************************************************************************
 // Roll控制
 void Roll_outerloop_ctr(float angle_num)
 {
@@ -337,6 +371,8 @@ void Pitch_innerloop_ctr()
     pid_func.calc(&control.PID_pitch_innerloop, control.PID_pitch_outerloop.out, MPU6050_para_filted.av_pitch/100.0f);
 }
 
+//*********************************************************************************************************
+
 // X轴光流控制（双环）
 void Px_outerloop_ctr()
 {
@@ -365,9 +401,11 @@ void Pz_outerloop_ctr()
     pid_func.calc(&control.MTF01_pitch_outerloop, stable_height, payload_filtered.distance);
 }
 
+//*********************************************************************************************************
+
 void Flight_control()
 {
-//     control.Mech_zero_yaw = MPU6050_para_filted.yaw;     // 防止转向后机头回0
+    // control.Mech_zero_yaw = MPU6050_para_filted.yaw;     // 防止转向后机头回0
 
     //补偿取绝对值+限幅
     compensate_factor=Throttle_compensate(MPU6050_para_filted.pitch,  MPU6050_para_filted.roll);
@@ -375,7 +413,7 @@ void Flight_control()
     {
         compensate_factor=-compensate_factor;
     }
-    if(compensate_factor<0.85f)
+    if(compensate_factor<0.85f)//???else if 
     {
         compensate_factor=0.85f;
     }
@@ -412,6 +450,7 @@ void Flight_control()
         Yaw_outerloop_ctr(control.Yaw + control.Mech_zero_yaw);
         Yaw_innerloop_ctr();
 
+        //Mixer
         control.PWM_Out1=control.Throttle/compensate_factor+control.PID_pitch_innerloop.out+control.PID_roll_innerloop.out-control.PID_yaw_innerloop.out;
         control.PWM_Out2=control.Throttle/compensate_factor+control.PID_pitch_innerloop.out-control.PID_roll_innerloop.out+control.PID_yaw_innerloop.out;
         control.PWM_Out3=control.Throttle/compensate_factor-control.PID_pitch_innerloop.out-control.PID_roll_innerloop.out-control.PID_yaw_innerloop.out;
@@ -432,16 +471,17 @@ void Flight_control()
         Roll_outerloop_ctr(-control.Roll + Mech_zero_roll);       // 是负的是因为调整了机头方向
         Roll_innerloop_ctr();
 
-        Pitch_outerloop_ctr(-control.Pitch + Mech_zero_pitch);    // 是负的是因为调整了机头方向
+        Pitch_outerloop_ctr(control.Pitch + Mech_zero_pitch);    
         Pitch_innerloop_ctr();
 
-        Yaw_outerloop_ctr(control.Yaw + control.Mech_zero_yaw);
+        Yaw_outerloop_ctr(-control.Yaw + control.Mech_zero_yaw);
         Yaw_innerloop_ctr();
 
-        control.PWM_Out1=control.Throttle/compensate_factor+control.PID_pitch_innerloop.out+control.PID_roll_innerloop.out-control.PID_yaw_innerloop.out;
-        control.PWM_Out2=control.Throttle/compensate_factor+control.PID_pitch_innerloop.out-control.PID_roll_innerloop.out+control.PID_yaw_innerloop.out;
-        control.PWM_Out3=control.Throttle/compensate_factor-control.PID_pitch_innerloop.out-control.PID_roll_innerloop.out-control.PID_yaw_innerloop.out;
-        control.PWM_Out4=control.Throttle/compensate_factor-control.PID_pitch_innerloop.out+control.PID_roll_innerloop.out+control.PID_yaw_innerloop.out;
+        //Mixer ???
+        control.PWM_Out1=control.Throttle/compensate_factor+control.PID_pitch_innerloop.out+control.PID_roll_innerloop.out-control.PID_yaw_innerloop.out;//++-
+        control.PWM_Out2=control.Throttle/compensate_factor+control.PID_pitch_innerloop.out-control.PID_roll_innerloop.out+control.PID_yaw_innerloop.out;//+-+
+        control.PWM_Out3=control.Throttle/compensate_factor-control.PID_pitch_innerloop.out-control.PID_roll_innerloop.out-control.PID_yaw_innerloop.out;//---
+        control.PWM_Out4=control.Throttle/compensate_factor-control.PID_pitch_innerloop.out+control.PID_roll_innerloop.out+control.PID_yaw_innerloop.out;//-++
 
         Limit(control.PWM_Out1, PWM_THROTTLE_MAX, PWM_THROTTLE_MIN);
         Limit(control.PWM_Out2, PWM_THROTTLE_MAX, PWM_THROTTLE_MIN);
