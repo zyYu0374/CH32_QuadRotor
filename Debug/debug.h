@@ -18,6 +18,7 @@
 #define DEBUG_UART1    1
 #define DEBUG_UART2    2
 #define DEBUG_UART3    3
+#define DEBUG_FAKE     4
 
 /* DEBUG UATR Definition */
 #define DEBUG   DEBUG_UART1
@@ -29,7 +30,10 @@ void Delay_Init(void);
 void Delay_Us (uint32_t n);
 void Delay_Ms (uint32_t n);
 void USART_Printf_Init(uint32_t baudrate);
+void USART_Printf_Fake_Init(uint32_t baudrate);
 void Delay_Us_nBlocking(uint16_t us);
+
+void printf_uart6(const char *fmt, ...);
 
 #endif 
 

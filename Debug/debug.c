@@ -11,6 +11,7 @@
 * microcontroller manufactured by Nanjing Qinheng Microelectronics.
 *******************************************************************************/
 #include "debug.h"
+#include <stdarg.h>
 
 static uint8_t  p_us = 0;
 static uint16_t p_ms = 0;
@@ -142,6 +143,30 @@ void USART_Printf_Init(uint32_t baudrate)
 #endif
 }
 
+void USART_Printf_Fake_Init(uint32_t baudrate)
+{
+    GPIO_InitTypeDef  GPIO_InitStructure;
+    USART_InitTypeDef USART_InitStructure;
+
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART6, ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
+
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+    GPIO_Init(GPIOC, &GPIO_InitStructure);
+
+    USART_InitStructure.USART_BaudRate = baudrate;
+    USART_InitStructure.USART_WordLength = USART_WordLength_8b;
+    USART_InitStructure.USART_StopBits = USART_StopBits_1;
+    USART_InitStructure.USART_Parity = USART_Parity_No;
+    USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+    USART_InitStructure.USART_Mode = USART_Mode_Tx;
+
+    USART_Init(UART6, &USART_InitStructure);
+    USART_Cmd(UART6, ENABLE);
+}
+
 /*********************************************************************
  * @fn      _write
  *
@@ -167,10 +192,28 @@ __attribute__((used)) int _write(int fd, char *buf, int size)
 #elif(DEBUG == DEBUG_UART3)
         while(USART_GetFlagStatus(USART3, USART_FLAG_TC) == RESET);
         USART_SendData(USART3, *buf++);
+#elif(DEBUG == DEBUG_FAKE)
+        while(USART_GetFlagStatus(UART6, USART_FLAG_TC) == RESET);
+        USART_SendData(UART6, *buf++);
 #endif
     }
 
     return size;
+}
+
+void printf_uart6(const char *fmt, ...) 
+{
+    char buffer[128];
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(buffer, sizeof(buffer), fmt, args);
+    va_end(args);
+
+    char *p = buffer;
+    while (*p) {
+        while (USART_GetFlagStatus(UART6, USART_FLAG_TC) == RESET);
+        USART_SendData(UART6, *p++);
+    }
 }
 
 /*********************************************************************
