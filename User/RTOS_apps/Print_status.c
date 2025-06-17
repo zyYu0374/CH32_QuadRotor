@@ -19,14 +19,24 @@ SendPackType SendPack;  //向上位机发送的数据包
 
 void Print_status_task(void *pvParameters)
 {
+    uint8_t LED2_PRINT_cnt = 0;
     while(1)
     {
+        LED2_PRINT_cnt++;
+        if(LED2_PRINT_cnt == 10)
+            GPIO_ResetBits(GPIOB,GPIO_Pin_12);//LED2
         // printf("2\r\n");
         // printf("Print\r\n");
 
         // Graph_print();
         String_print();
         // Serial_data_send();
+
+        if(LED2_PRINT_cnt == 20)
+        {
+            GPIO_SetBits(GPIOB,GPIO_Pin_12);
+            LED2_PRINT_cnt == 0;
+        }
 
         vTaskDelay(PRINT_DELAY_TIME);
 
@@ -137,10 +147,10 @@ void String_print()
     // printf("MOTOR_PWM3:%d\r\n",control.PWM_Out3);   //n=3
     // printf("MOTOR_PWM4:%d\r\n",control.PWM_Out4);   //n=4  
 
-    printf("MOTOR_PWM1:%d\r\n",TIM_GetCapture1(TIM9));   //n=1
-    printf("MOTOR_PWM2:%d\r\n",TIM_GetCapture2(TIM9));   //n=2
-    printf("MOTOR_PWM3:%d\r\n",TIM_GetCapture3(TIM9));   //n=3
-    printf("MOTOR_PWM4:%d\r\n",TIM_GetCapture4(TIM9));   //n=4  
+    // printf("MOTOR_PWM1:%d\r\n",TIM_GetCapture1(TIM9));   //n=1
+    // printf("MOTOR_PWM2:%d\r\n",TIM_GetCapture2(TIM9));   //n=2
+    // printf("MOTOR_PWM3:%d\r\n",TIM_GetCapture3(TIM9));   //n=3
+    // printf("MOTOR_PWM4:%d\r\n",TIM_GetCapture4(TIM9));   //n=4  
 
     // printf("distance:%d\r\n",payload_filtered.distance);
     // printf("Px:%f\r\n",payload_filtered.Px);

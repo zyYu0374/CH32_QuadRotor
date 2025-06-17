@@ -6,6 +6,7 @@
 *******************************************************************************/
 #include "IMU_handle.h"
 #include "DPS310.h"
+#include "MPU6050.h"
 
 FilterBuf_STRUCT gyro_filter[6];    //IMU平均值滤波结构体,Head+Rear+base[5]
 MPU6050_para_t MPU6050_para =       //从IMU获取到的原始数据
@@ -26,18 +27,37 @@ void calc_IMU_filter();
 
 void IMU_task(void *pvParameters)
 {
+    uint8_t LED5_IMU_cnt = 0;
+    uint8_t mputime = 0;
     while(1)
     {
-        // printf("4\r\n");
-        // printf("IMU\r\n");
-        // DPS310_Pressure = DPS310_Get_Pressure();//加了之后导致程序只在电机软起动线程运行
+        LED5_IMU_cnt ++;
+        if(LED5_IMU_cnt == 10)
+            GPIO_ResetBits(GPIOB,GPIO_Pin_1);//LED5
         IMU_IO_STATUS = IMU_IO_BUSY;    //更新状态
-        if(MPU6050_MPU_DMP_GetData() == RESET)
-        {
-            load_filter_data();
-            calc_IMU_filter();
-        }
+        // if(MPU6050_MPU_DMP_GetData() == RESET)
+        // {
+        //     load_filter_data();
+        //     calc_IMU_filter();
+        // }
+
+        mputime++;
+		if(mputime == 2)
+		{
+			wdvhc_get_data(1);
+            // load_filter_data();
+            // calc_IMU_filter();
+			mputime = 0;
+		}
+		else
+			wdvhc_get_data(0);
         IMU_IO_STATUS = IMU_IO_IDLE;    //更新状态
+
+        if(LED5_IMU_cnt == 20)//关LED
+        {
+            GPIO_SetBits(GPIOB,GPIO_Pin_1);
+            LED5_IMU_cnt = 0;
+        }
         vTaskDelay(IMU_READ_DELAY);
     }
 }
@@ -72,4 +92,6 @@ void calc_IMU_filter()
     {
         MPU6050_para_filted.av_pitch=0;
     }
+    // printf("%f,%f,%f\r\n",MPU6050_para_filted.yaw,MPU6050_para_filted.pitch,MPU6050_para_filted.roll);
+    // printf("%f,%f,%f\r\n",MPU6050_para_filted.av_yaw,MPU6050_para_filted.av_pitch,MPU6050_para_filted.av_roll);
 }

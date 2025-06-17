@@ -18,13 +18,15 @@ float Motor_speed_set = PWM_THROTTLE_MIN; //油门值设定
 void Motor_sort_start(void *pvParameters);
 
 /*缓启动线程*/
-void Motor_sort_start(void *pvParameters)
+void Motor_sort_start(void *pvParameters) 
 {
+    uint8_t LED1_MOTOR_cnt = 0;
     control.is_locked = Locked; //确保不会刚开机就缓启动（此线程优先级最高）
     while(1)
     {
-        // printf("1\r\n");
-        // printf("SS\r\n");
+        LED1_MOTOR_cnt ++;
+        if(LED1_MOTOR_cnt == 10)
+            GPIO_ResetBits(GPIOD,GPIO_Pin_8);//LED1
         if(control.is_locked == Unlocked && last_RC_lock_state == Locked){	//当解锁电机时候
             printf("MOTOR UNLOCKED!!!!\n");
             last_RC_lock_state = Unlocked;
@@ -56,6 +58,12 @@ void Motor_sort_start(void *pvParameters)
 //            control.Mech_zero_yaw = MPU6050_para_filted.yaw;
         }
 
+        if(LED1_MOTOR_cnt == 20)
+        {
+            GPIO_SetBits(GPIOD,GPIO_Pin_8);LED1_MOTOR_cnt = 0;
+            LED1_MOTOR_cnt == 0;
+        }
+            
         vTaskDelay(10);    //10ms监听一次
     }
 

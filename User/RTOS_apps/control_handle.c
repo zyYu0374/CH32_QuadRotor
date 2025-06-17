@@ -34,12 +34,14 @@ float compensate_factor = 1.0f;
 
 void control_handle_task(void *pvParameters)
 {
+    uint8_t LED3_CTRL_cnt = 0;
     control_para_init();    // 初始化全局变量
 
     while(1)
     {
-        // printf("3\r\n");
-        // printf("Control\r\n");
+        LED3_CTRL_cnt ++;
+        if(LED3_CTRL_cnt == 10)
+            GPIO_ResetBits(GPIOA,GPIO_Pin_15);//LED3
         Update_ELRS();//遥控器数据更新
         if(control.MOTOR_MODE != MOTOR_SOFT_STARTING){      //如果电机正在缓启动，电机不执行控制
             if(control.is_locked==Unlocked){
@@ -63,6 +65,13 @@ void control_handle_task(void *pvParameters)
                 pid_func.clc(&control.PID_yaw_innerloop);
             }
         }
+
+        if(LED3_CTRL_cnt == 20)//关LED
+        {
+            GPIO_SetBits(GPIOA,GPIO_Pin_15);
+            LED3_CTRL_cnt = 0;
+        }
+            
         vTaskDelay(CONRTOL_PERIOD);
     }
 }
@@ -336,7 +345,7 @@ float angle2rad(float angle)
     return angle*3.1416/180.0f;
 }
 
-//*********************************************************************************************************
+//********************************************MPU6050******************************************************
 // Roll控制
 void Roll_outerloop_ctr(float angle_num)
 {
@@ -371,7 +380,7 @@ void Pitch_innerloop_ctr()
     pid_func.calc(&control.PID_pitch_innerloop, control.PID_pitch_outerloop.out, MPU6050_para_filted.av_pitch/100.0f);
 }
 
-//*********************************************************************************************************
+//********************************************光流定点********************************************************
 
 // X轴光流控制（双环）
 void Px_outerloop_ctr()

@@ -43,7 +43,7 @@ void RTOS_init()
                 (const char*    )"uart",
                 (uint16_t       )PRINT_STK_SIZE,
                 (void*          )NULL,
-                (UBaseType_t    )PRINT_TASK_PRIO,
+                (UBaseType_t    )PRINT_TASK_PRIO,//3
                 (TaskHandle_t*  )&PrintTask_Handler);
     
     // 电机软启动线程
@@ -51,7 +51,7 @@ void RTOS_init()
                 (const char*    )"Soft",
                 (uint16_t       )SoftStart_SIZE,
                 (void*          )NULL,
-                (UBaseType_t    )SoftStart_PRIO,
+                (UBaseType_t    )SoftStart_PRIO,//4
                 (TaskHandle_t*  )&Motor_SoftStart_Handler);
 
     //飞机控制线程
@@ -59,7 +59,7 @@ void RTOS_init()
                 (const char*    )"control",
                 (uint16_t       )ControlHandle_SIZE,
                 (void*          )NULL,
-                (UBaseType_t    )ControlHandle_PRIO,
+                (UBaseType_t    )ControlHandle_PRIO,//0
                 (TaskHandle_t*  )&Control_task_Handler);
 
     //IMU线程
@@ -67,7 +67,7 @@ void RTOS_init()
                 (const char*    )"imu",
                 (uint16_t       )IMU_SIZE,
                 (void*          )NULL,
-                (UBaseType_t    )IMU_PRIO,
+                (UBaseType_t    )IMU_PRIO,//1
                 (TaskHandle_t*  )&IMU_Task_Handler);
 
     // //DPS310气压计线程
