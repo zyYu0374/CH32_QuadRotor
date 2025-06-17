@@ -5,6 +5,9 @@
 /*RTOS*/
 #include "FreeRTOS.h"
 #include "task.h"
+#include "math.h"
+
+// #define PRINTF 1
 
 static void I2C2_HARD_Init(u32 bound,u16 host_addr)
 {
@@ -62,8 +65,9 @@ static void MPU6050_WriteByte(unsigned char REG_ADDR,unsigned char _data)
 
 static void MPU6050_SetRate(int rate)
 {
-    MPU6050_WriteByte(MPU6050_REG_SMPLRT_DIV, 1000/rate-1);//设置数字低通滤波器
+    MPU6050_WriteByte(MPU6050_REG_SMPLRT_DIV, 1000/rate+1);//低通滤波器(DLPF)使能时，陀螺仪输出频率为1kHz
 
+    //设置数字低通滤波器
     if(rate/2>=188)MPU6050_WriteByte(MPU6050_REG_CONFIG, 0);
     else if(rate/2>=98)MPU6050_WriteByte(MPU6050_REG_CONFIG, 2);
     else if(rate/2>=42)MPU6050_WriteByte(MPU6050_REG_CONFIG, 3);
@@ -83,8 +87,8 @@ unsigned char MPU6050_Init()
 	MPU6050_WriteByte(MPU6050_REG_PWR_MGMT1, 0x80);//复位
 	Delay_Ms(100);
 	MPU6050_WriteByte(MPU6050_REG_PWR_MGMT1, 0x00);//解除休眠状态
-	MPU6050_SetRate(400);//设置采样率
-	MPU6050_WriteByte(MPU6050_REG_ACCEL_CONFIG, 0x00 << 3);//0x00 = 2g;0x01 = 4g;0x02 = 8g;0x03 = 16g
+	MPU6050_SetRate(125);//设置MPU6050采样率，原为400Hz
+	MPU6050_WriteByte(MPU6050_REG_ACCEL_CONFIG, 0x01 << 3);//0x00 = 2g;0x01 = 4g;0x02 = 8g;0x03 = 16g    原为0x00 << 3
 	MPU6050_WriteByte(MPU6050_REG_GYRO_CONFIG, 0x03 << 3);//0x00 = ±250dps;0x01 = ±500dps;0x02 = ±1000dps;0x03 = ±2000dps
 	MPU6050_WriteByte(MPU6050_REG_INT_EN, 0X00);	//关闭所有中断
 	MPU6050_WriteByte(MPU6050_REG_USER_CTRL, 0X00);	//I2C主模式关闭
@@ -115,7 +119,7 @@ uint8_t MPU6050_I2C_Mem_Read(unsigned char DEV_ADDR, unsigned char REG_ADDR, uns
     while(!I2C_CheckEvent(I2C2, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED))   //卡在这一行！！！
     {
         count_mem_read++;
-        printf("count:%d\r\n",count_mem_read);
+        printf_uart6("count:%d\r\n",count_mem_read);//输出到一个不使用的串口uart6……神秘
         
         if(--timeout == 0)//超时处理
         {
@@ -128,8 +132,6 @@ uint8_t MPU6050_I2C_Mem_Read(unsigned char DEV_ADDR, unsigned char REG_ADDR, uns
         }
     }
     count_mem_read = 0; //重置计数器
-
-    
 
     //发送数据
     I2C_SendData(I2C2, REG_ADDR);
@@ -210,5 +212,200 @@ unsigned char MPU6050_MPU_DMP_GetData(void)
 	return res;
 }
 #endif
+/************************************不使用DMP库************************************************************/
 
+#define sampleFreq	125.0f			// sample frequency in Hz
+/*采样周期的一半，用于求解四元数微分方程时计算角增量
+请确定自己的姿态调用周期: 8ms,即上面的sampleFreq: 125Hz*/
+#define halfT 0.004f
 
+//这里的Kp,Ki是用于控制加速度计修正陀螺仪积分姿态的速度
+#define Kp 2.0f  		//2.0f
+#define Ki 0.0016f  	//0.002f
+
+int16_t Gyro[3], Acc[3];			//原始数据
+// float Pitch, Roll, Yaw;				//俯仰、横滚、偏航
+float gx=0, gy=0, gz=0;				//由角速度计 算的角速率
+float ax=0, ay=0, az=0;				//由加速度计 算的加速度
+
+float acc_sp[3];						//积分速度
+float acc_sp_RHRH[3];				//处理后速度
+
+float bd_gx=0, bd_gy=0, bd_gz=0;
+float bd_ax=0, bd_ay=0, bd_az=0;
+
+//初始姿态四元数(地理坐标系)，q(q0,q1,q2,q3)
+float q0 = 1.0f, q1 = 0.0f, q2 = 0.0f, q3 = 0.0f;    //最优估计四元数
+float q0_yaw = 1.0f, q1_yaw = 0.0f, q2_yaw = 0.0f, q3_yaw = 0.0f;    //弥补Mahony算法在无地磁情况解算Yaw轴满足不了大扰动要求的现象
+//定义姿态解算误差的积分
+//当前加计测得的重力加速度在三轴(x,y,z)上的分量,与当前姿态计算得来的重力在三轴上的分量的误差的积分
+float xErrorInt = 0.0f, yErrorInt = 0.0f, zErrorInt = 0.0f;
+
+/*
+ * 姿态融合
+ * 单位: 加速度m/s^2   角速度rad/s
+*/
+void ImuUpdate(float gx, float gy, float gz, float ax, float ay, float az)//g表陀螺仪，a表加计
+{
+  float norm;
+	
+  float q0q0 = q0 * q0;
+  float q0q1 = q0 * q1;
+  float q0q2 = q0 * q2;
+  float q1q1 = q1 * q1;
+  float q1q3 = q1 * q3;
+  float q2q2 = q2*q2;
+  float q2q3 = q2*q3;
+  float q3q3 = q3*q3;	
+  float vx, vy, vz;
+  float ex, ey, ez;
+	
+	float	q0_yawq0_yaw = q0_yaw * q0_yaw;
+	float	q1_yawq1_yaw = q1_yaw * q1_yaw;
+	float	q2_yawq2_yaw = q2_yaw * q2_yaw;
+	float	q3_yawq3_yaw = q3_yaw * q3_yaw;
+	float	q1_yawq2_yaw = q1_yaw * q2_yaw;
+	float	q0_yawq3_yaw = q0_yaw * q3_yaw;
+	
+	//**************************Yaw轴计算******************************
+	//Yaw轴四元素的微分方程，先单独解出yaw的姿态
+  q0_yaw = q0_yaw + (-q1_yaw * gx - q2_yaw * gy - q3_yaw * gz) * halfT;	//halfT采样时间的一半
+  q1_yaw = q1_yaw + (q0_yaw * gx + q2_yaw * gz - q3_yaw * gy) * halfT;
+  q2_yaw = q2_yaw + (q0_yaw * gy - q1_yaw * gz + q3_yaw * gx) * halfT;
+  q3_yaw = q3_yaw + (q0_yaw * gz + q1_yaw * gy - q2_yaw * gx) * halfT;
+	
+	//规范化Yaw轴四元数
+  norm = sqrt(q0_yawq0_yaw + q1_yawq1_yaw + q2_yawq2_yaw + q3_yawq3_yaw);
+  q0_yaw = q0_yaw / norm;
+  q1_yaw = q1_yaw / norm;
+  q2_yaw = q2_yaw / norm;
+  q3_yaw = q3_yaw / norm;
+	
+	if(ax * ay * az	== 0)//如果加速度数据无效，或者自由坠落，不结算
+	return ;
+	
+	//规范化加速度计值
+  norm = sqrt(ax * ax + ay * ay + az * az); 
+  ax = ax / norm;
+  ay = ay / norm;
+  az = az / norm;
+	
+	//估计重力方向和流量/变迁，重力加速度在机体系的投影
+  vx = 2 * (q1q3 - q0q2);											
+  vy = 2 * (q0q1 + q2q3);
+  vz = q0q0 - q1q1 - q2q2 + q3q3 ;
+	
+  //向量外积再相减得到差分就是误差
+  ex = (ay * vz - az * vy) ;      
+  ey = (az * vx - ax * vz) ;
+  ez = (ax * vy - ay * vx) ;
+ 
+	//对误差进行PI计算
+  xErrorInt = xErrorInt + ex * Ki;			
+  yErrorInt = yErrorInt + ey * Ki;
+  zErrorInt = zErrorInt + ez * Ki;
+ 
+  //校正陀螺仪
+  gx = gx + Kp * ex + xErrorInt;					
+  gy = gy + Kp * ey + yErrorInt;
+  gz = gz + Kp * ez + zErrorInt;			
+			
+	//四元素的微分方程
+  q0 = q0 + (-q1 * gx - q2	*	gy - q3	*	gz)	*	halfT;
+  q1 = q1 + (q0	*	gx + q2	*	gz - q3	*	gy)	*	halfT;
+  q2 = q2 + (q0	*	gy - q1	*	gz + q3	*	gx)	*	halfT;
+  q3 = q3 + (q0	*	gz + q1	*	gy - q2	*	gx)	*	halfT;
+ 
+  //规范化Pitch、Roll轴四元数
+  norm = sqrt(q0q0 + q1q1 + q2q2 + q3q3);
+  q0 = q0 / norm;
+  q1 = q1 / norm;
+  q2 = q2 / norm;
+  q3 = q3 / norm;
+	
+	//求解欧拉角
+	MPU6050_para.pitch = atan2(2 * q2q3 + 2 * q0q1, -2 * q1q1 - 2 * q2q2 + 1) * 57.3f;
+	MPU6050_para.roll = asin(-2 * q1q3 + 2 * q0q2) * 57.3f;
+	MPU6050_para.yaw = atan2(2 * q1_yawq2_yaw + 2 * q0_yawq3_yaw, -2 * q2_yawq2_yaw - 2 * q3_yawq3_yaw + 1)	* 57.3f;
+    // printf("%f,%f,%f\r\n",MPU6050_para.yaw,MPU6050_para.pitch,MPU6050_para.roll);
+}
+
+void wdvhc_get_data(uint8_t on)
+{
+	MPU6050ReadAcc(Acc);
+	MPU6050ReadGyro(Gyro);
+
+	//陀螺仪量程为:±250 dps     获取到的陀螺仪数据除以131           可以转化为带物理单位的数据，单位为：°/s
+	//陀螺仪量程为:±500 dps     获取到的陀螺仪数据除以65.5          可以转化为带物理单位的数据，单位为：°/s
+	//陀螺仪量程为:±1000dps     获取到的陀螺仪数据除以32.8          可以转化为带物理单位的数据，单位为：°/s
+	//陀螺仪量程为:±2000dps     获取到的陀螺仪数据除以16.4          可以转化为带物理单位的数据，单位为：°/s
+
+	//加速度计量程为:±2g        获取到的加速度计数据 除以16384      可以转化为带物理单位的数据，单位：g(m/s^2)
+	//加速度计量程为:±4g        获取到的加速度计数据 除以8192       可以转化为带物理单位的数据，单位：g(m/s^2)
+	//加速度计量程为:±8g        获取到的加速度计数据 除以4096       可以转化为带物理单位的数据，单位：g(m/s^2)
+	//加速度计量程为:±16g       获取到的加速度计数据 除以2048       可以转化为带物理单位的数据，单位：g(m/s^2)
+
+    //输出值=加速度值(g)*4096
+	ax = (float)Acc[0] * 0.0001220703125f;// 1/8192
+	ay = (float)Acc[1] * 0.0001220703125f;
+	az = (float)Acc[2] * 0.0001220703125f;
+    // printf("%f,%f,%f\r\n",ax,ay,az);
+
+    bd_ax = 0.4975f*ax - 0.0706f;// 线性校正，6.16校准后很准
+	bd_ay = 0.4971f*ay + 0.0213f;
+	bd_az = 0.4902f*az + 0.1419f;
+    // printf("%f,%f,%f\r\n",bd_ax,bd_ay,bd_az);
+
+    //输出值=每秒转动的度数(°/s)*16.4
+	bd_gx = (float)Gyro[0] * 0.0609756f;// 1/16.4
+	bd_gy = (float)Gyro[1] * 0.0609756f;
+	bd_gz = (float)Gyro[2] * 0.0609756f;
+    // printf("%f,%f,%f\r\n",bd_gx,bd_gy,bd_gz);
+
+    bd_gx += 3.1463f;//offset校正
+    bd_gy += 1.6890f;
+    bd_gz += 1.1098f;
+    // MPU6050_para.av_yaw = 
+    // printf("%f,%f,%f\r\n",bd_gx,bd_gy,bd_gz);
+	
+    // *0.0174533 = ÷57.3
+	LPF_1_(1.8f,0.002f ,bd_gx*0.0174533f, gx);//一阶低通滤波
+	LPF_1_(1.8f,0.002f ,bd_gy*0.0174533f, gy);
+	
+	acc_sp[0] += (az-0.995f)/3.0f;
+	acc_sp[1] += ax * 5.2f;
+	acc_sp[2] -= ay * 5.2f;	
+	
+	if(on == 1)
+		ImuUpdate(bd_gx*0.0174533f, bd_gy*0.0174533f, bd_gz*0.0174533f, bd_ax, bd_ay, bd_az);
+}
+
+/**
+  * @brief   读取MPU6050的加速度数据
+  * @param   
+  * @retval  
+  */
+void MPU6050ReadAcc(short *accData)
+{
+    uint8_t buf[6];
+    // MPU6050_ReadData(MPU6050_REG_ACCEL_XOUT_H, buf, 6);//从0x3B开始 读6字节，X Y Z
+    MPU6050_I2C_Mem_Read(MPU6050_ADDR, MPU6050_REG_ACCEL_XOUT_H, 6, buf);//第三个参数表字节数？从0x3B开始 读6字节，X Y Z
+    accData[0] = (buf[0] << 8) | buf[1];
+    accData[1] = (buf[2] << 8) | buf[3];
+    accData[2] = (buf[4] << 8) | buf[5];
+}
+
+/**
+  * @brief   读取MPU6050的角加速度数据
+  * @param   
+  * @retval  
+  */
+void MPU6050ReadGyro(short *gyroData)
+{
+    uint8_t buf[6];
+    // MPU6050_ReadData(MPU6050_REG_GYRO_XOUT_H,buf,6);
+    MPU6050_I2C_Mem_Read(MPU6050_ADDR, MPU6050_REG_GYRO_XOUT_H, 6, buf);
+    gyroData[0] = (buf[0] << 8) | buf[1];
+    gyroData[1] = (buf[2] << 8) | buf[3];
+    gyroData[2] = (buf[4] << 8) | buf[5];
+}

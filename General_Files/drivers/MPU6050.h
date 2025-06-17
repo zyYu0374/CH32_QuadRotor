@@ -103,10 +103,27 @@ typedef struct
 	float yaw;
 	float pitch;
 	float roll;
-	int16_t av_yaw;
-	int16_t av_pitch;
-	int16_t av_roll;
+	float av_yaw;
+	float av_pitch;
+	float av_roll;
 }MPU6050_para_t;
+
+/*************************************不使用DMP库*************************************************************/
+extern int16_t Gyro[], Acc[];			//原始数据
+// extern float Pitch, Roll, Yaw;		//俯仰、横滚、偏航
+extern float gx, gy, gz;					//由角速度计算的角速率
+extern float ax, ay, az;					//由加速度计算的加速度
+
+extern float acc_sp[];						//积分速度
+extern float acc_sp_RHRH[];				//处理后速度
+
+extern float bd_gx, bd_gy, bd_gz;
+extern float bd_ax, bd_ay, bd_az;
+
+void ImuUpdate(float gx, float gy, float gz, float ax, float ay, float az); //g表陀螺仪，a表加计
+void wdvhc_get_data(uint8_t on);
+
+#define LPF_1_(hz,t,in,out) ((out) += ( 1 / ( 1 + 1 / ( (hz) *3.14f *(t) ) ) ) *( (in) - (out) ))
 
 
 #endif
