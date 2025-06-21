@@ -24,10 +24,10 @@ extern void control_handle_task(void *pvParameters);
 
 
 //共使用了Crsf的7个通道
-#define ELRS_Throttle       CrsfChannels[2]
+#define ELRS_Throttle       CrsfChannels[2]//174~1805
 #define ELRS_Pitch          CrsfChannels[1]//elevator
-#define ELRS_Yaw            CrsfChannels[0]//rudder方向舵   //25.6.12:roll和yaw互换
-#define ELRS_Roll           CrsfChannels[3]//aileron副翼
+#define ELRS_Yaw            CrsfChannels[3]//rudder方向舵   //25.6.12:roll和yaw互换
+#define ELRS_Roll           CrsfChannels[0]//aileron副翼
 
 #define ELRS_mode           CrsfChannels[6]//三个档位191,997,1792-->control.flight_mode
 #define ELRS_Control_mode   CrsfChannels[5]//三个档位191,997,1792-->Control_mode
@@ -80,7 +80,7 @@ typedef struct
     float Roll;
     float MTF01_roll_agnle;
     float MTF01_pitch_agnle;
-    uint16_t Throttle;
+    uint16_t Throttle;  //1350~2232
     int CONTROL_MODE;    //控制模式设定
     int MOTOR_MODE;      //电机模式设定
 }Control_TypeDef;
@@ -123,7 +123,8 @@ typedef struct
 #define GPS     2
 
 //调试壳子有阻尼，调试壳测出来的参数需要乘以一个比例系数
-#define damp_rate   0.55
+// #define damp_rate   0.55
+#define damp_rate   1.00
 
 // 着陆状态标志
 #define landing      1

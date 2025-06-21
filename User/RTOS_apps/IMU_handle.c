@@ -45,8 +45,8 @@ void IMU_task(void *pvParameters)
 		if(mputime == 2)
 		{
 			wdvhc_get_data(1);
-            // load_filter_data();
-            // calc_IMU_filter();
+            load_filter_data();
+            calc_IMU_filter();
 			mputime = 0;
 		}
 		else
@@ -66,32 +66,33 @@ void IMU_task(void *pvParameters)
 // 把数据加载到用于滤波的工具数组里
 void load_filter_data()
 {
-    FilterSample(&gyro_filter[0], MPU6050_para.yaw);
-    FilterSample(&gyro_filter[1], MPU6050_para.pitch);
-    FilterSample(&gyro_filter[2], MPU6050_para.roll);
-    FilterSample(&gyro_filter[3], (float)MPU6050_para.av_yaw);
-    FilterSample(&gyro_filter[4], (float)MPU6050_para.av_pitch);
-    FilterSample(&gyro_filter[5], (float)MPU6050_para.av_roll);
+    // FilterSample(&gyro_filter[0], MPU6050_para.yaw);
+    // FilterSample(&gyro_filter[1], MPU6050_para.pitch);
+    // FilterSample(&gyro_filter[2], MPU6050_para.roll);
+    FilterSample(&gyro_filter[3], MPU6050_para.av_yaw);
+    FilterSample(&gyro_filter[4], MPU6050_para.av_pitch);
+    FilterSample(&gyro_filter[5], MPU6050_para.av_roll);
 }
 
 // 基于工具数组的数据计算滤波值
 void calc_IMU_filter()
 {
     /*!Debug 调换了Pitch和Roll*/
-    MPU6050_para_filted.yaw = FilterAverage(&gyro_filter[0]);
-    MPU6050_para_filted.pitch = FilterAverage(&gyro_filter[2]);
-    MPU6050_para_filted.roll = FilterAverage(&gyro_filter[1]);
+    // MPU6050_para_filted.yaw = FilterAverage(&gyro_filter[0]);
+    // MPU6050_para_filted.pitch = FilterAverage(&gyro_filter[1]);
+    // MPU6050_para_filted.roll = FilterAverage(&gyro_filter[2]);
     MPU6050_para_filted.av_yaw = FilterAverage(&gyro_filter[3]);
     MPU6050_para_filted.av_pitch = FilterAverage(&gyro_filter[4]);
     MPU6050_para_filted.av_roll = FilterAverage(&gyro_filter[5]);
-    if(MPU6050_para_filted.av_roll<=15&&MPU6050_para_filted.av_roll>=-15)
-    {
-        MPU6050_para_filted.av_roll=0;
-    }
-    if(MPU6050_para_filted.av_pitch<=15&&MPU6050_para_filted.av_pitch>=-15)
-    {
-        MPU6050_para_filted.av_pitch=0;
-    }
+    // if(MPU6050_para_filted.av_roll<=15&&MPU6050_para_filted.av_roll>=-15)
+    // {
+    //     MPU6050_para_filted.av_roll=0;
+    // }
+    // if(MPU6050_para_filted.av_pitch<=15&&MPU6050_para_filted.av_pitch>=-15)
+    // {
+    //     MPU6050_para_filted.av_pitch=0;
+    // }
     // printf("%f,%f,%f\r\n",MPU6050_para_filted.yaw,MPU6050_para_filted.pitch,MPU6050_para_filted.roll);
     // printf("%f,%f,%f\r\n",MPU6050_para_filted.av_yaw,MPU6050_para_filted.av_pitch,MPU6050_para_filted.av_roll);
+    // printf("%f\r\n",MPU6050_para_filted.av_roll);
 }
