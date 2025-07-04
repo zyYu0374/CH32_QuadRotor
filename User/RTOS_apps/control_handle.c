@@ -243,12 +243,12 @@ float ELRS_Convert_angle(int ELRS_data)
     return angle;
 }
 
-// 将摇杆值转化为油门，映射为0~100
-u16 ELRS_Convert_throttle(unsigned ELRS_data)
+// 将摇杆值转化为油门
+u16 ELRS_Convert_throttle(unsigned ELRS_data)   //174~1805
 {
     u16 throttle;
     if(ELRS_data<=200){
-        throttle=1350;
+        throttle=1350;//怠速
     }
     else {
         throttle=1350+(u16)(ELRS_data-200)*ELRS2throttle;

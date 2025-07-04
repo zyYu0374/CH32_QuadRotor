@@ -98,7 +98,7 @@ typedef struct
 // ELRS数据转换到角度数据，ELRS_data * ELRS2angle = angle，30/(1811-1000) = 0.037
 #define ELRS2angle    0.06
 // ELRS数据转换到油门数据：ELRS_data * ELRS2throttle = throttle，1440/1711=0.8416
-#define ELRS2throttle 0.55  // 不是0.8419是因为略微留一点裕度给油门调节起飞
+#define ELRS2throttle 0.8419  // 不是0.8419是因为略微留一点裕度给油门调节起飞
 //#define ELRS2throttle 0.92  // 不是0.8419是因为略微留一点裕度给油门调节起飞
 
 // 最大允许倾斜角度，还需计算

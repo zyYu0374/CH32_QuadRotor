@@ -113,14 +113,14 @@ void Motor_ctr(u16 pwm, u8 n)
 /*用于在软启动模式下使用*/
 void Motor_ctr_SOFT_START(u16 pwm, u8 n)
 {
-    int motor_id_fix;
+    // int motor_id_fix;
     if(pwm<=PWM_THROTTLE_MIN){  //限制输入油门
      pwm=PWM_THROTTLE_MIN;
     }else if(pwm>=PWM_THROTTLE_MAX){  //限制输入油门
      pwm=PWM_THROTTLE_MAX;
     }
-    motor_id_fix = Motor_pos[n-1];
-    switch (motor_id_fix)
+    // motor_id_fix = Motor_pos[n-1];
+    switch (n)
     {
         case 1:
             TIM_SetCompare1(TIM9,pwm);  //1号电机
