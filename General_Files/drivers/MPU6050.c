@@ -63,9 +63,10 @@ static void MPU6050_WriteByte(unsigned char REG_ADDR,unsigned char _data)
     MPU6050_I2C_Mem_Write(MPU6050_ADDR, REG_ADDR, 1, &_data);
 }
 
+//陀螺仪分频后作为mpu6050的采样率。采样率=1K/(DIV+1)
 static void MPU6050_SetRate(int rate)
 {
-    MPU6050_WriteByte(MPU6050_REG_SMPLRT_DIV, 1000/rate+1);//低通滤波器(DLPF)使能时，陀螺仪输出频率为1kHz
+    MPU6050_WriteByte(MPU6050_REG_SMPLRT_DIV, (1000/rate)-1);//低通滤波器(DLPF)使能时，陀螺仪输出频率为1kHz
 
     //设置数字低通滤波器
     if(rate/2>=188)MPU6050_WriteByte(MPU6050_REG_CONFIG, 0);
@@ -324,9 +325,9 @@ void ImuUpdate(float gx, float gy, float gz, float ax, float ay, float az)//g表
   q3 = q3 / norm;
 	
 	//求解欧拉角
-	MPU6050_para.pitch = atan2(2 * q2q3 + 2 * q0q1, -2 * q1q1 - 2 * q2q2 + 1) * 57.3f;
-	MPU6050_para.roll = asin(-2 * q1q3 + 2 * q0q2) * 57.3f;
-	MPU6050_para.yaw = atan2(2 * q1_yawq2_yaw + 2 * q0_yawq3_yaw, -2 * q2_yawq2_yaw - 2 * q3_yawq3_yaw + 1)	* 57.3f;
+	MPU6050_para_filted.pitch = atan2(2 * q2q3 + 2 * q0q1, -2 * q1q1 - 2 * q2q2 + 1) * 57.3f;
+	MPU6050_para_filted.roll = asin(-2 * q1q3 + 2 * q0q2) * 57.3f;
+	MPU6050_para_filted.yaw = atan2(2 * q1_yawq2_yaw + 2 * q0_yawq3_yaw, -2 * q2_yawq2_yaw - 2 * q3_yawq3_yaw + 1)	* 57.3f;
     // printf("%f,%f,%f\r\n",MPU6050_para.yaw,MPU6050_para.pitch,MPU6050_para.roll);
 }
 
@@ -351,6 +352,7 @@ void wdvhc_get_data(uint8_t on)
 	az = (float)Acc[2] * 0.0001220703125f;
     // printf("%f,%f,%f\r\n",ax,ay,az);
 
+    //加速度数据用来融合算出角度数据
     bd_ax = 0.4975f*ax - 0.0706f;// 线性校正，6.16校准后很准
 	bd_ay = 0.4971f*ay + 0.0213f;
 	bd_az = 0.4902f*az + 0.1419f;
@@ -360,7 +362,12 @@ void wdvhc_get_data(uint8_t on)
 	bd_gx = (float)Gyro[0] * 0.0609756f;// 1/16.4
 	bd_gy = (float)Gyro[1] * 0.0609756f;
 	bd_gz = (float)Gyro[2] * 0.0609756f;
+    //角速度
+    MPU6050_para.av_pitch = bd_gx;
+    MPU6050_para.av_roll = bd_gy;
+    MPU6050_para.av_yaw = bd_gz;
     // printf("%f,%f,%f\r\n",bd_gx,bd_gy,bd_gz);
+    // printf("%f\r\n",bd_gy);
 
     bd_gx += 3.1463f;//offset校正
     bd_gy += 1.6890f;
