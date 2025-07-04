@@ -5,7 +5,8 @@
 
 // int Motor_pos[4] = {2, 3, 4, 1}; //原电机的ID映射
 // int Motor_pos[4] = {4, 1, 3, 2}; //25嵌赛四合一电调电机的ID映射
-int Motor_pos[4] = {4, 2, 3, 1};    //25嵌赛商品电调的ID映射（4ctrl_output与TIM9_CH1对应。去年的硬件没有改）
+// int Motor_pos[4] = {4, 2, 3, 1};    //25嵌赛商品电调的ID映射（4ctrl_output与TIM9_CH1对应。去年的硬件没有改）
+// 2025.7.4重新梳理全部电机序号和硬件标号
 
 void TIM9_PWMOut_Init( u16 arr, u16 psc, u16 ccp )
 {
@@ -82,26 +83,26 @@ void Motor_ctr(u16 pwm, u8 n)
     /*!Debug 验证电机ID*/
     //if(n != 3) pwm=PWM_THROTTLE_MIN;
     /*修正电机ID*/
-    motor_id_fix = Motor_pos[n-1];
+    // motor_id_fix = Motor_pos[n-1];  // Motor_pos[4] = {4, 2, 3, 1}
 
     /*软启动时禁用*/
     if(control.MOTOR_MODE == MOTOR_SOFT_STARTING){
         return;
     }
 
-    switch (motor_id_fix)
+    switch (n)
     {
         case 1:
-            TIM_SetCompare1(TIM9,pwm);  //1号电机,n=4
+            TIM_SetCompare1(TIM9,pwm); 
             break;
         case 2:
-            TIM_SetCompare2(TIM9,pwm);  //2号电机,n=1
+            TIM_SetCompare2(TIM9,pwm); 
             break;
         case 3:
-            TIM_SetCompare3(TIM9,pwm);  //3号电机,n=2,PD13
+            TIM_SetCompare3(TIM9,pwm); 
             break;
         case 4:
-            TIM_SetCompare4(TIM9,pwm);  //4号电机,n=3,PD15
+            TIM_SetCompare4(TIM9,pwm); 
             break;
         default:
             break;
