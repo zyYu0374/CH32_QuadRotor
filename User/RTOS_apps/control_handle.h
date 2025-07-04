@@ -87,7 +87,7 @@ typedef struct
 
 
 //电机软启动相关?
-#define SOFT_START_TIME 300 //软启动时间，单位 ms
+#define SOFT_START_TIME 500 //软启动时间，单位 ms   
 
 #define IMU_SAMPLE_SIZE 4 //IMU平均值滤波器大小
 

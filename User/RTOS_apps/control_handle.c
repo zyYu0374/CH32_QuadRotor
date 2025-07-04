@@ -49,7 +49,7 @@ void control_handle_task(void *pvParameters)
                     Flight_control();
                 }
                 else if(control.Throttle<PWM_CLOSE_LOOP_CONTROL_ENABLE){
-                    Motor_ctr(control.Throttle,1);
+                    Motor_ctr(control.Throttle,1);//以ELRS_Convert_throttle里转化的油门值怠速
                     Motor_ctr(control.Throttle,2);
                     Motor_ctr(control.Throttle,3);
                     Motor_ctr(control.Throttle,4);
@@ -248,10 +248,10 @@ u16 ELRS_Convert_throttle(unsigned ELRS_data)   //174~1805
 {
     u16 throttle;
     if(ELRS_data<=200){
-        throttle=1350;//怠速
+        throttle=PWM_UnlockButNoThrottle;//缓启动后的怠速：1350
     }
     else {
-        throttle=1350+(u16)(ELRS_data-200)*ELRS2throttle;
+        throttle=PWM_UnlockButNoThrottle+(u16)(ELRS_data-200)*ELRS2throttle;
     }
     return throttle;
 }

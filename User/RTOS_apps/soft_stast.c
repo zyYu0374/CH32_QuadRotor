@@ -33,7 +33,8 @@ void Motor_sort_start(void *pvParameters)
             control.MOTOR_MODE = MOTOR_SOFT_STARTING;	//切换到缓启动模式
             // control.Mech_zero_yaw = MPU6050_para_filted.yaw;
             for(int i=0; i<SOFT_START_TIME; i++){	//缓启动逻辑
-                Motor_speed_set = ((((float)PWM_THROTTLE_MIN_ROTATE-(float)PWM_THROTTLE_MIN)/(float)SOFT_START_TIME))*i + PWM_THROTTLE_MIN;//从最小油门一点一点往上加
+                //从最小油门PWM_THROTTLE_MIN一点一点加到电机最小转动油门PWM_THROTTLE_MIN_ROTATE
+                Motor_speed_set = PWM_THROTTLE_MIN + ((((float)PWM_THROTTLE_MIN_ROTATE-(float)PWM_THROTTLE_MIN)/(float)SOFT_START_TIME))*i;
                     Motor_ctr_SOFT_START(Motor_speed_set, 1);
                     Motor_ctr_SOFT_START(Motor_speed_set, 2);
                     Motor_ctr_SOFT_START(Motor_speed_set, 3);
