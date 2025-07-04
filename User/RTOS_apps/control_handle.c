@@ -85,7 +85,7 @@ void PIDSTRUCT_Init()
     /******************************* Yaw *************************************/
     // 航向角外环初始化（角度环）
     pid_func.reset(&control.PID_yaw_outerloop);
-    control.PID_yaw_outerloop.Kp=3.0f*damp_rate;//3.0
+    // control.PID_yaw_outerloop.Kp=3.0f*damp_rate;//3.0
     control.PID_yaw_outerloop.Ki=0.0f*damp_rate;
     control.PID_yaw_outerloop.Kd=0.0f*damp_rate;
     control.PID_yaw_outerloop.max_iout=Angle_I_Limit;
@@ -97,9 +97,9 @@ void PIDSTRUCT_Init()
 
     // 航向角内环初始化（角速度环）
     pid_func.reset(&control.PID_yaw_innerloop);
-    control.PID_yaw_innerloop.Kp=5.7f*damp_rate;//2.7
-    control.PID_yaw_innerloop.Ki=0.0f*damp_rate;
-    control.PID_yaw_innerloop.Kd=6.9f*damp_rate;//6.9
+    // control.PID_yaw_innerloop.Kp=5.7f*damp_rate;//2.7
+    // control.PID_yaw_innerloop.Ki=0.0f*damp_rate;
+    // control.PID_yaw_innerloop.Kd=6.9f*damp_rate;//6.9
     control.PID_yaw_innerloop.max_iout=Gyro_I_Limit;
     control.PID_yaw_innerloop.min_iout=-Gyro_I_Limit;
     control.PID_yaw_innerloop.max_out=65535;
@@ -259,50 +259,30 @@ u16 ELRS_Convert_throttle(unsigned ELRS_data)
 // 将摇杆值转化为电机锁
 void ELRS_Convert_lock()
 {
-    // switch (control.is_locked)
-    // {
-    // case Unlocked:
-    //         if(ELRS_Throttle_lock>180 && ELRS_Throttle_lock<200)//松开191
-    //         {
-    //             control.is_locked = Locked;
-    //         }
-    //     break;
-    
-    // case Locked:
-    //     if(ELRS_Throttle<=650){//防止解锁时油门过大
-    //         if(ELRS_Throttle_lock>=1785 && ELRS_Throttle_lock<=1800){
-    //         control.is_locked = Unlocked;
-    //         }
-    //     }
-    //     break;
-
-    // default:
-    //     control.is_locked = control.is_locked;
-    //     break;
-    // }
     if (ELRS_Throttle_lock>=1785 && ELRS_Throttle_lock<=1800){
-        
         control.is_locked = Unlocked;
     }
-    else {
+    else if(ELRS_Throttle_lock>=990 && ELRS_Throttle_lock<=1010){
         control.is_locked = Locked;
     }
-    
+    else{
+        control.is_locked = Locked;
+    }
 }
 
-// 将摇杆值转化为飞行模式
-void ELRS_Convert_flight_mode()
-{
-    if (ELRS_mode>=1785 && ELRS_mode<=1800){
-        control.flight_mode = GPS;
-    }
-    else if(ELRS_mode>=990 && ELRS_mode<=1010){
-        control.flight_mode = Stable;
-    }
-    else{
-        control.flight_mode = Free;
-    }
-}
+// // 将摇杆值转化为飞行模式
+// void ELRS_Convert_flight_mode()
+// {
+//     if (ELRS_mode>=1785 && ELRS_mode<=1800){
+//         control.flight_mode = GPS;
+//     }
+//     else if(ELRS_mode>=990 && ELRS_mode<=1010){
+//         control.flight_mode = Stable;
+//     }
+//     else{
+//         control.flight_mode = Free;
+//     }
+// }
 
 // 更新运动控制模式
 void Check_control_mode()
@@ -327,7 +307,7 @@ void Update_ELRS()
     control.Pitch=-ELRS_Convert_angle(ELRS_Pitch);
     control.Throttle = ELRS_Convert_throttle(ELRS_Throttle);
     ELRS_Convert_lock();
-    ELRS_Convert_flight_mode();
+    // ELRS_Convert_flight_mode();
     Check_control_mode(); //同步控制模式
 }
 

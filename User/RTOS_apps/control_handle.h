@@ -29,9 +29,9 @@ extern void control_handle_task(void *pvParameters);
 #define ELRS_Yaw            CrsfChannels[3]//rudder方向舵   //25.6.12:roll和yaw互换
 #define ELRS_Roll           CrsfChannels[0]//aileron副翼
 
-#define ELRS_mode           CrsfChannels[6]//三个档位191,997,1792-->control.flight_mode
-#define ELRS_Control_mode   CrsfChannels[5]//三个档位191,997,1792-->Control_mode
-#define ELRS_Throttle_lock  CrsfChannels[4]//松开191,按下1792
+#define ELRS_Control_mode   CrsfChannels[6]//三个档位191,997,1792,右侧三档拨钮
+#define ELRS_Throttle_lock  CrsfChannels[5]//三个档位191,997,1792,左侧三档拨钮
+#define ELRS_NC             CrsfChannels[4]//松开191,按下1792
 //#define ELRS_XXX            CrsfChannels[5]
 //#define ELRX_XXX            CrsfChannels[7]
 
