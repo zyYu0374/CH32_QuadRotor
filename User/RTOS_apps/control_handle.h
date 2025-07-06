@@ -11,7 +11,7 @@
 #include "../General_Files/drivers/MTF01.h"
 
 /*控制参数*/
-#define CONRTOL_PERIOD  10  //控制周期，10ms->100Hz
+#define CONRTOL_PERIOD  8  //控制周期，10ms->100Hz
 
 extern void control_handle_task(void *pvParameters);
 

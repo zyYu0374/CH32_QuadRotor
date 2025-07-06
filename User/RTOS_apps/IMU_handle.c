@@ -44,7 +44,7 @@ void IMU_task(void *pvParameters)
         mputime++;
 		if(mputime == 2)
 		{
-			wdvhc_get_data(1);
+			wdvhc_get_data(1);//姿态解算 数据融合
             load_filter_data();
             calc_IMU_filter();
 			mputime = 0;

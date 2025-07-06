@@ -21,6 +21,7 @@ n:   电机编号 motor_ctr(pwm,n)
 
 #include "control_handle.h"
 #include "math.h"
+#include <pwm.h>
 
 /*全局变量*/
 Control_TypeDef control;
@@ -110,7 +111,7 @@ void PIDSTRUCT_Init()
     /******************************* pitch *************************************/
     // 俯仰角外环初始化（角度环）
     pid_func.reset(&control.PID_pitch_outerloop);
-    control.PID_pitch_outerloop.Kp=2.3f*damp_rate;
+    control.PID_pitch_outerloop.Kp=2.0f*damp_rate;
     control.PID_pitch_outerloop.Ki=0.0f*damp_rate; //-0.12
     control.PID_pitch_outerloop.Kd=0.0f*damp_rate;  //-5.3
     control.PID_pitch_outerloop.max_iout=Angle_I_Limit;
@@ -122,9 +123,9 @@ void PIDSTRUCT_Init()
 
     // 俯仰角内环初始化（角速度环）
     pid_func.reset(&control.PID_pitch_innerloop);
-    control.PID_pitch_innerloop.Kp=0.77f*damp_rate;    //2.2
-    // control.PID_pitch_innerloop.Ki=0.018f*damp_rate;    //0.0
-    control.PID_pitch_innerloop.Kd=3.0*damp_rate;    //5.7
+    control.PID_pitch_innerloop.Kp=0.52f*damp_rate;    //2.2
+    control.PID_pitch_innerloop.Ki=0.029f*damp_rate;    //0.0
+    control.PID_pitch_innerloop.Kd=1.9*damp_rate;    //5.7
     control.PID_pitch_innerloop.max_iout=Gyro_I_Limit;
     control.PID_pitch_innerloop.min_iout=-Gyro_I_Limit;
     control.PID_pitch_innerloop.max_out=300;
@@ -135,26 +136,22 @@ void PIDSTRUCT_Init()
     /******************************* Roll *************************************/
     // 横滚角外环初始化（角度环）
     pid_func.reset(&control.PID_roll_outerloop);
-    control.PID_roll_outerloop.Kp=2.3*damp_rate;//2.3
-    // control.PID_roll_outerloop.Kp=0.0*damp_rate;
+    control.PID_roll_outerloop.Kp=2.0*damp_rate;//2.3
     control.PID_roll_outerloop.Ki=0.0*damp_rate;
     control.PID_roll_outerloop.Kd=0.0*damp_rate;//0.38
     control.PID_roll_outerloop.max_iout=Angle_I_Limit;
     control.PID_roll_outerloop.min_iout=-Angle_I_Limit;
     control.PID_roll_outerloop.max_out=65535;
     control.PID_roll_outerloop.min_out=-65535;
-    control.PID_roll_outerloop.DeadBand=0.01;
+    control.PID_roll_outerloop.DeadBand=0.005;
     pid_func.init(&control.PID_roll_outerloop);     // 清空缓存
 
     // 横滚角内环初始化（角速度环）
     //第一个调
     pid_func.reset(&control.PID_roll_innerloop);
-    control.PID_roll_innerloop.Kp=0.77f*damp_rate;//0.825  0.785  0.77
-    // control.PID_roll_innerloop.Kp=0.0*damp_rate;
-    // control.PID_roll_innerloop.Ki=0.018f;//0.0198  0.018
-    control.PID_roll_innerloop.Ki=0.0f; 
-    control.PID_roll_innerloop.Kd=3.0*damp_rate;//2.3，之前有的时候被输出限幅了
-    // control.PID_roll_innerloop.Kd=0.0*damp_rate;
+    control.PID_roll_innerloop.Kp=0.52f*damp_rate;//0.825  0.785  0.77  0.52
+    control.PID_roll_innerloop.Ki=0.029f;//0.0198  0.018
+    control.PID_roll_innerloop.Kd=1.9*damp_rate;//2.3，之前有的时候被输出限幅了
     control.PID_roll_innerloop.max_iout=Gyro_I_Limit;
     control.PID_roll_innerloop.min_iout=-Gyro_I_Limit;
     control.PID_roll_innerloop.max_out=300;
@@ -248,10 +245,10 @@ u16 ELRS_Convert_throttle(unsigned ELRS_data)   //174~1805
 {
     u16 throttle;
     if(ELRS_data<=200){
-        throttle=PWM_UnlockButNoThrottle;//缓启动后的怠速：1350
+        throttle = PWM_THROTTLE_START_POINT;//缓启动后的怠速：1350
     }
     else {
-        throttle=PWM_UnlockButNoThrottle+(u16)(ELRS_data-200)*ELRS2throttle;
+        throttle = PWM_THROTTLE_START_POINT + (u16)(ELRS_data-200)*ELRS2throttle;
     }
     return throttle;
 }
@@ -463,10 +460,9 @@ void Flight_control()
     }
     else if(control.CONTROL_MODE == PID_CONTROL_MODE || (control.CONTROL_MODE == STABLE_CONTROL_MODE && payload.tof_status == 0))  // 正常PID模式
     {
-        // printf("Roll:%f\r\n",control.Roll);
         Roll_outerloop_ctr(control.Roll + Mech_zero_roll);       // 是负的是因为调整了机头方向
         Roll_innerloop_ctr();
-        // printf("Roll_inner.out:%f\r\n",control.PID_roll_innerloop.out);
+        printf("%f,%f\r\n",control.PID_roll_innerloop.out,control.PID_roll_outerloop.out);
 
         Pitch_outerloop_ctr(control.Pitch + Mech_zero_pitch);    
         Pitch_innerloop_ctr();

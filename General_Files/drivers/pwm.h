@@ -7,9 +7,9 @@
 
 #define PWM_THROTTLE_MAX 2780           //最大PWM占空比
 #define PWM_THROTTLE_MIN 1440           //最小PWM占空比     1440÷7200=20%
-#define PWM_THROTTLE_MIN_ROTATE 1700    //让电机转动的最小油门  1700÷7200=23.6%  1650÷7200=22.9%  1550无法怠速启动
-#define PWM_CLOSE_LOOP_CONTROL_ENABLE 1700 //启用pid控制的油门
-#define PWM_THROTTLE_START_POINT 1350    //从1350到1650为空裕度，详见motor_ctl()
+#define PWM_THROTTLE_MIN_ROTATE 1700    //让电机转动(可以顺利拖动)的最小油门;1700÷7200=23.6%;1650÷7200=22.9%;1550电机无法顺利拖动
+#define PWM_CLOSE_LOOP_CONTROL_ENABLE 1710 //启用pid控制的油门
+#define PWM_THROTTLE_START_POINT 1350    //从1350到1700为空油门，详见motor_ctl()
 
 // define mode1锛屽氨鏄?鍚戜笅璁℃暟锛宮ode2鏄?鍚戜笂璁℃暟
 #define PWM_MODE PWM_MODE1

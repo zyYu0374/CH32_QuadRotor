@@ -362,17 +362,17 @@ void wdvhc_get_data(uint8_t on)
 	bd_gx = (float)Gyro[0] * 0.0609756f;// 1/16.4
 	bd_gy = (float)Gyro[1] * 0.0609756f;
 	bd_gz = (float)Gyro[2] * 0.0609756f;
+    
+    // printf("%f,%f,%f\r\n",bd_gx,bd_gy,bd_gz);
+    // printf("%f\r\n",bd_gy);
+
+    bd_gx += 3.1213f;//offset校正
+    bd_gy += 1.4940f;
+    bd_gz += 1.1098f;
     //角速度
     MPU6050_para.av_pitch = bd_gx;
     MPU6050_para.av_roll = bd_gy;
     MPU6050_para.av_yaw = bd_gz;
-    // printf("%f,%f,%f\r\n",bd_gx,bd_gy,bd_gz);
-    // printf("%f\r\n",bd_gy);
-
-    bd_gx += 3.1463f;//offset校正
-    bd_gy += 1.6890f;
-    bd_gz += 1.1098f;
-    // MPU6050_para.av_yaw = 
     // printf("%f,%f,%f\r\n",bd_gx,bd_gy,bd_gz);
 	
     // *0.0174533 = ÷57.3
