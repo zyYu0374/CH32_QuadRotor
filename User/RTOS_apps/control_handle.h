@@ -26,7 +26,7 @@ extern void control_handle_task(void *pvParameters);
 //共使用了Crsf的7个通道
 #define ELRS_Throttle       CrsfChannels[2]//174~1805
 #define ELRS_Pitch          CrsfChannels[1]//elevator
-#define ELRS_Yaw            CrsfChannels[3]//rudder方向舵   //25.6.12:roll和yaw互换
+#define ELRS_Yaw            CrsfChannels[3]//rudder方向舵 ; 25.6.12:roll和yaw互换 ; 174~992~1811
 #define ELRS_Roll           CrsfChannels[0]//aileron副翼
 
 #define ELRS_Control_mode   CrsfChannels[6]//三个档位191,997,1792,右侧三档拨钮

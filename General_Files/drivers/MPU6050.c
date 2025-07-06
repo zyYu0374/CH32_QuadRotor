@@ -327,7 +327,7 @@ void ImuUpdate(float gx, float gy, float gz, float ax, float ay, float az)//g表
 	//求解欧拉角
 	MPU6050_para_filted.pitch = atan2(2 * q2q3 + 2 * q0q1, -2 * q1q1 - 2 * q2q2 + 1) * 57.3f;
 	MPU6050_para_filted.roll = asin(-2 * q1q3 + 2 * q0q2) * 57.3f;
-	MPU6050_para_filted.yaw = atan2(2 * q1_yawq2_yaw + 2 * q0_yawq3_yaw, -2 * q2_yawq2_yaw - 2 * q3_yawq3_yaw + 1)	* 57.3f;
+	MPU6050_para_filted.yaw = -atan2(2 * q1_yawq2_yaw + 2 * q0_yawq3_yaw, -2 * q2_yawq2_yaw - 2 * q3_yawq3_yaw + 1)	* 57.3f;
     // printf("%f,%f,%f\r\n",MPU6050_para.yaw,MPU6050_para.pitch,MPU6050_para.roll);
 }
 
@@ -372,7 +372,7 @@ void wdvhc_get_data(uint8_t on)
     //角速度
     MPU6050_para.av_pitch = bd_gx;
     MPU6050_para.av_roll = bd_gy;
-    MPU6050_para.av_yaw = bd_gz;
+    MPU6050_para.av_yaw = -bd_gz;
     // printf("%f,%f,%f\r\n",bd_gx,bd_gy,bd_gz);
 	
     // *0.0174533 = ÷57.3

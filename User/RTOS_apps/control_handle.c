@@ -86,7 +86,7 @@ void PIDSTRUCT_Init()
     /******************************* Yaw *************************************/
     // 航向角外环初始化（角度环）
     pid_func.reset(&control.PID_yaw_outerloop);
-    // control.PID_yaw_outerloop.Kp=3.0f*damp_rate;//3.0
+    control.PID_yaw_outerloop.Kp=2.0f*damp_rate;//3.0
     control.PID_yaw_outerloop.Ki=0.0f*damp_rate;
     control.PID_yaw_outerloop.Kd=0.0f*damp_rate;
     control.PID_yaw_outerloop.max_iout=Angle_I_Limit;
@@ -98,9 +98,9 @@ void PIDSTRUCT_Init()
 
     // 航向角内环初始化（角速度环）
     pid_func.reset(&control.PID_yaw_innerloop);
-    // control.PID_yaw_innerloop.Kp=5.7f*damp_rate;//2.7
-    // control.PID_yaw_innerloop.Ki=0.0f*damp_rate;
-    // control.PID_yaw_innerloop.Kd=6.9f*damp_rate;//6.9
+    control.PID_yaw_innerloop.Kp=1.7f*damp_rate;//2.7
+    control.PID_yaw_innerloop.Ki=0.0f*damp_rate;
+    control.PID_yaw_innerloop.Kd=4.0f*damp_rate;//6.9
     control.PID_yaw_innerloop.max_iout=Gyro_I_Limit;
     control.PID_yaw_innerloop.min_iout=-Gyro_I_Limit;
     control.PID_yaw_innerloop.max_out=65535;
@@ -124,7 +124,7 @@ void PIDSTRUCT_Init()
     // 俯仰角内环初始化（角速度环）
     pid_func.reset(&control.PID_pitch_innerloop);
     control.PID_pitch_innerloop.Kp=0.52f*damp_rate;    //2.2
-    control.PID_pitch_innerloop.Ki=0.029f*damp_rate;    //0.0
+    // control.PID_pitch_innerloop.Ki=0.029f*damp_rate;    //0.0
     control.PID_pitch_innerloop.Kd=1.9*damp_rate;    //5.7
     control.PID_pitch_innerloop.max_iout=Gyro_I_Limit;
     control.PID_pitch_innerloop.min_iout=-Gyro_I_Limit;
@@ -439,7 +439,7 @@ void Flight_control()
         Pitch_outerloop_ctr(control.Pitch + Mech_zero_pitch + control.MTF01_pitch_agnle);
         Pitch_innerloop_ctr();
 
-        Yaw_outerloop_ctr(control.Yaw + control.Mech_zero_yaw);
+        Yaw_outerloop_ctr((control.Yaw + control.Mech_zero_yaw));
         Yaw_innerloop_ctr();
 
         //Mixer
@@ -462,7 +462,7 @@ void Flight_control()
     {
         Roll_outerloop_ctr(control.Roll + Mech_zero_roll);       // 是负的是因为调整了机头方向
         Roll_innerloop_ctr();
-        printf("%f,%f\r\n",control.PID_roll_innerloop.out,control.PID_roll_outerloop.out);
+        // printf("%f,%f\r\n",control.PID_roll_innerloop.out,control.PID_roll_outerloop.out);
 
         Pitch_outerloop_ctr(control.Pitch + Mech_zero_pitch);    
         Pitch_innerloop_ctr();
@@ -478,10 +478,10 @@ void Flight_control()
 
         //6.18调整，与上刚好相反
         //飞机向右转，roll_inner.out是个负值，所以1 3电机应该是油门+roll_inner.out,2 4电机是油门-roll_inner.out
-        control.PWM_Out1=control.Throttle/compensate_factor + control.PID_pitch_innerloop.out + control.PID_roll_innerloop.out + control.PID_yaw_innerloop.out;//++-
-        control.PWM_Out2=control.Throttle/compensate_factor + control.PID_pitch_innerloop.out - control.PID_roll_innerloop.out - control.PID_yaw_innerloop.out;//+-+
-        control.PWM_Out3=control.Throttle/compensate_factor - control.PID_pitch_innerloop.out + control.PID_roll_innerloop.out - control.PID_yaw_innerloop.out;//-++
-        control.PWM_Out4=control.Throttle/compensate_factor - control.PID_pitch_innerloop.out - control.PID_roll_innerloop.out + control.PID_yaw_innerloop.out;//---
+        control.PWM_Out1=control.Throttle/compensate_factor + control.PID_pitch_innerloop.out + control.PID_roll_innerloop.out - control.PID_yaw_innerloop.out;//++-
+        control.PWM_Out2=control.Throttle/compensate_factor + control.PID_pitch_innerloop.out - control.PID_roll_innerloop.out + control.PID_yaw_innerloop.out;//+-+
+        control.PWM_Out3=control.Throttle/compensate_factor - control.PID_pitch_innerloop.out + control.PID_roll_innerloop.out + control.PID_yaw_innerloop.out;//-++
+        control.PWM_Out4=control.Throttle/compensate_factor - control.PID_pitch_innerloop.out - control.PID_roll_innerloop.out - control.PID_yaw_innerloop.out;//---
 
         Limit(control.PWM_Out1, PWM_THROTTLE_MAX, PWM_THROTTLE_MIN);
         Limit(control.PWM_Out2, PWM_THROTTLE_MAX, PWM_THROTTLE_MIN);
