@@ -49,6 +49,7 @@ void Motor_sort_start(void *pvParameters)
             }//301ms
 
             printf("MOTOR OK!!!!\n");
+            control.Mech_zero_yaw = MPU6050_para_filted.yaw;    //解锁电机时设置此时方向为Yaw的零点
             control.MOTOR_MODE = MOTOR_NORMAL; //切换回正常模式
         }
 

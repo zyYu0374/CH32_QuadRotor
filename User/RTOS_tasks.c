@@ -39,7 +39,7 @@ void RTOS_init()
     //                 (TaskHandle_t*  )&TESTTask_Handler);
 
     // 串口调试线程
-    xTaskCreate((TaskFunction_t )Print_status_task,//2
+    xTaskCreate((TaskFunction_t )Print_status_task,//100Hz
                 (const char*    )"uart",
                 (uint16_t       )PRINT_STK_SIZE,
                 (void*          )NULL,
@@ -47,7 +47,7 @@ void RTOS_init()
                 (TaskHandle_t*  )&PrintTask_Handler);
     
     // 电机软启动线程
-    xTaskCreate((TaskFunction_t )Motor_sort_start,//1
+    xTaskCreate((TaskFunction_t )Motor_sort_start,//100Hz
                 (const char*    )"Soft",
                 (uint16_t       )SoftStart_SIZE,
                 (void*          )NULL,
@@ -55,7 +55,7 @@ void RTOS_init()
                 (TaskHandle_t*  )&Motor_SoftStart_Handler);
 
     //飞机控制线程
-    xTaskCreate((TaskFunction_t )control_handle_task,//3
+    xTaskCreate((TaskFunction_t )control_handle_task,//125Hz
                 (const char*    )"control",
                 (uint16_t       )ControlHandle_SIZE,
                 (void*          )NULL,
@@ -63,7 +63,7 @@ void RTOS_init()
                 (TaskHandle_t*  )&Control_task_Handler);
 
     //IMU线程
-    xTaskCreate((TaskFunction_t )IMU_task,//4
+    xTaskCreate((TaskFunction_t )IMU_task,//200Hz；角速度获取200Hz，角度解算200Hz/2=100Hz
                 (const char*    )"imu",
                 (uint16_t       )IMU_SIZE,
                 (void*          )NULL,
@@ -71,7 +71,7 @@ void RTOS_init()
                 (TaskHandle_t*  )&IMU_Task_Handler);
 
     // //DPS310气压计线程
-    // xTaskCreate((TaskFunction_t )DPS310_task,//5
+    // xTaskCreate((TaskFunction_t )DPS310_task,//10Hz
     //             (const char*    )"DPS310",
     //             (uint16_t       )DPS310_SIZE,
     //             (void*          )NULL,

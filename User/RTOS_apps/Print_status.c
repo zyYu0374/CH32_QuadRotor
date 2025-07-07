@@ -123,6 +123,9 @@ void String_print()
     // printf("yaw_filted=%f\r\n",MPU6050_para_filted.yaw);
     // printf("pitch_filted=%f\r\n",MPU6050_para_filted.pitch);
     // printf("roll_filted=%f\r\n",MPU6050_para_filted.roll);
+    // printf("%f,%f,%f\r\n",MPU6050_para_filted.yaw,MPU6050_para_filted.pitch,MPU6050_para_filted.roll);
+    // printf("%f,%f,%f\r\n",MPU6050_para_filted.yaw,control.Yaw,MPU6050_para_filted.av_yaw);
+    printf("%f\r\n",control.PID_yaw_innerloop.out);
 
     // printf("av_yaw_filted=%f\r\n",MPU6050_para_filted.av_yaw);
     // printf("av_pitch_filted=%f\r\n",MPU6050_para_filted.av_pitch);
@@ -133,9 +136,12 @@ void String_print()
     // printf("yaw=%f\r\n",MPU6050_para.yaw);
     // printf("pitch=%f\r\n",MPU6050_para.pitch);
     // printf("roll=%f\r\n",MPU6050_para.roll);
-    // printf("av_yaw=%d\r\n",MPU6050_para.av_yaw);
-    // printf("av_pitch=%d\r\n",MPU6050_para.av_pitch);
-    // printf("av_roll=%d\r\n",MPU6050_para.av_roll);
+    // printf("av_yaw=%f\r\n",MPU6050_para.av_yaw);
+    // printf("av_pitch=%f\r\n",MPU6050_para.av_pitch);
+    // printf("av_roll=%f\r\n",MPU6050_para.av_roll);
+    static float av_roll_SUM;
+    av_roll_SUM += MPU6050_para_filted.av_roll;
+    // printf("%f,%f\r\n",MPU6050_para.av_pitch,MPU6050_para_filted.av_pitch);
 
     // printf("yaw_outer_loop=%f\r\n",control.PID_yaw_outerloop.out);
     // printf("roll_outer_loop=%f\r\n",control.PID_roll_outerloop.out);
@@ -147,20 +153,20 @@ void String_print()
     // printf("pitch_out=%f\r\n",control.PID_pitch_innerloop.out);
 
 
-    // printf("MOTOR_PWM1:%d\r\n",TIM_GetCapture4(TIM9));   //n=1
+    // printf("MOTOR_PWM1:%d\r\n",TIM_GetCapture1(TIM9));   //n=1
     // printf("MOTOR_PWM2:%d\r\n",TIM_GetCapture2(TIM9));   //n=2
     // printf("MOTOR_PWM3:%d\r\n",TIM_GetCapture3(TIM9));   //n=3
-    // printf("MOTOR_PWM4:%d\r\n",TIM_GetCapture1(TIM9));   //n=4
+    // printf("MOTOR_PWM4:%d\r\n",TIM_GetCapture4(TIM9));   //n=4
 
-    //这是算过PID、Mixer后的PWM输出
+    // 这是算过PID、Mixer后的PWM输出
     // printf("MOTOR_PWM1:%d\r\n",control.PWM_Out1);   //n=1
     // printf("MOTOR_PWM2:%d\r\n",control.PWM_Out2);   //n=2
     // printf("MOTOR_PWM3:%d\r\n",control.PWM_Out3);   //n=3
     // printf("MOTOR_PWM4:%d\r\n",control.PWM_Out4);   //n=4  
     // printf("%f,%f,%d,%d,%d,%d\r\n",(control.Throttle/compensate_factor),control.PID_roll_innerloop.out,control.PWM_Out1,control.PWM_Out2,control.PWM_Out3,control.PWM_Out4);
-    // printf("%f\r\n",control.PID_roll_innerloop.out);
-    // printf("%f\r\n",MPU6050_para_filted.yaw);
-    printf("%d,%d,%d,%d,%f,%f,%f,%f\r\n",control.PWM_Out1,control.PWM_Out2,control.PWM_Out3,control.PWM_Out4,control.Yaw,control.Pitch,control.Roll,control.Throttle);
+    // printf("%d,%d,%d,%d,%f,%f,%f,%f\r\n",control.PWM_Out1,control.PWM_Out2,control.PWM_Out3,control.PWM_Out4,control.Yaw,control.Pitch,control.Roll,control.Throttle);
+    // printf("%f,%f\r\n",control.PID_roll_innerloop.out,MPU6050_para_filted.av_roll);
+
 
     // printf("MOTOR_PWM1:%d\r\n",TIM_GetCapture1(TIM9));   //n=1
     // printf("MOTOR_PWM2:%d\r\n",TIM_GetCapture2(TIM9));   //n=2
@@ -203,7 +209,7 @@ void String_print()
 //    printf("ch1:ELRS_roll %d\r\n",CrsfChannels[0]);    // ELRS_roll
 //    printf("ch2:ELRS_Pitch %d\r\n",CrsfChannels[1]);    // ELRS_Pitch
 //    printf("ch3:ELRS_Throttle %d\r\n",CrsfChannels[2]);    // ELRS_Throttle
-//    printf("ch4:ELRS_yaw %d\r\n",CrsfChannels[3]);    // ELRS_yaw
+//    printf("ch4:ELRS_yaw %d\r\n",-CrsfChannels[3]);    // ELRS_yaw
 //    printf("ch5:ELRS_Throttle_lock %d\r\n",CrsfChannels[4]);    // ELRS_Throttle_lock
 //    printf("ch6:ELRS_Control_mode %d\r\n",CrsfChannels[5]);    // ELRS_Control_mode
 //    printf("ch7:ELRS_mode %d\r\n",CrsfChannels[6]);    // ELRS_mode

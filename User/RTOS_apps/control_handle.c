@@ -397,7 +397,7 @@ void Pz_outerloop_ctr()
 
 void Flight_control()
 {
-    // control.Mech_zero_yaw = MPU6050_para_filted.yaw;     // 防止转向后机头回0
+    control.Mech_zero_yaw = MPU6050_para_filted.yaw;     // 防止转向后机头回0
 
     //油门补偿 取绝对值+限幅
     // compensate_factor=Throttle_compensate(MPU6050_para_filted.pitch,  MPU6050_para_filted.roll);
