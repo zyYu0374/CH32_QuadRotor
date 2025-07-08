@@ -256,8 +256,13 @@ u16 ELRS_Convert_throttle(unsigned ELRS_data)   //174~1805
 // 将摇杆值转化为电机锁
 void ELRS_Convert_lock()
 {
+    static bool ThroStatus_isLocked_last = Locked;//1
+    bool ThroStatus_isLocked = !(ELRS_Throttle_lock>=1785 && ELRS_Throttle_lock<=1800);//解锁为0，上锁为1
+
     if (ELRS_Throttle_lock>=1785 && ELRS_Throttle_lock<=1800){
-        control.is_locked = Unlocked;
+        if(ELRS_Throttle<=200 && ThroStatus_isLocked_last == Locked){
+            control.is_locked = Unlocked;
+        }
     }
     else if(ELRS_Throttle_lock>=990 && ELRS_Throttle_lock<=1010){
         control.is_locked = Locked;
@@ -265,6 +270,8 @@ void ELRS_Convert_lock()
     else{
         control.is_locked = Locked;
     }
+
+    ThroStatus_isLocked_last = ThroStatus_isLocked;
 }
 
 // // 将摇杆值转化为飞行模式
